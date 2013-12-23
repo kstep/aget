@@ -57,22 +57,27 @@ class DownloadItemsAdapter extends ArrayAdapter<DownloadItem> {
 
         Button pauseBtn = (Button) view.findViewById(R.id.downloadPause);
         Button startBtn = (Button) view.findViewById(R.id.downloadStart);
+        Button reloadBtn = (Button) view.findViewById(R.id.downloadReload);
+
         switch (status) {
             case INITIAL:
             case PAUSED:
             case FAILED:
                 pauseBtn.setVisibility(View.INVISIBLE);
                 startBtn.setVisibility(View.VISIBLE);
+                reloadBtn.setVisibility(View.INVISIBLE);
                 break;
 
             case STARTED:
                 pauseBtn.setVisibility(View.VISIBLE);
                 startBtn.setVisibility(View.INVISIBLE);
+                reloadBtn.setVisibility(View.INVISIBLE);
                 break;
 
             case FINISHED:
                 pauseBtn.setVisibility(View.INVISIBLE);
                 startBtn.setVisibility(View.INVISIBLE);
+                reloadBtn.setVisibility(View.VISIBLE);
                 break;
         }
 

@@ -47,6 +47,16 @@
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@id/downloadCancel"
         />
+    <Button
+        android:id="@+id/downloadReload"
+        android:onClick="downloadReload"
+        android:background="@drawable/ic_action_replay"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:clickable="true"
+        android:layout_centerVertical="true"
+        android:layout_toLeftOf="@id/downloadCancel"
+        />
 
     <ProgressBar
         android:id="@+id/downloadProgress"

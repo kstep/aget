@@ -44,6 +44,10 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         item.setStatus(DownloadItem.Status.PAUSED);
     }
 
+    public void downloadReload(View button) {
+        DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
+    }
+
     @UiThread
     public void downloadItemChanged(DownloadItem item) {
         ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
