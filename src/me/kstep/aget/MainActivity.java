@@ -29,20 +29,16 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         setListAdapter(adapter);
     }
 
-    @Click
     public void downloadStart(View button) {
-        android.util.Log.d("aGet", "downloadStart clicked");
         DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
         downloadItem(item);
     }
 
-    @Click
     public void downloadCancel(View button) {
         DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
         item.setStatus(DownloadItem.Status.CANCELED);
     }
 
-    @Click
     public void downloadPause(View button) {
         DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
         item.setStatus(DownloadItem.Status.PAUSED);
@@ -58,7 +54,6 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     void downloadItem(DownloadItem item) {
         item.fetchFileName();
         downloadItemChanged(item);
-        android.util.Log.d("aGet", "name updated, downloading...");
         item.download(this);
     }
 
