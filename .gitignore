@@ -1,0 +1,4 @@
+gen/
+bin/
+.ant_generated/
+images/
