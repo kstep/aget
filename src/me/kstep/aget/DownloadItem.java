@@ -198,7 +198,7 @@ class DownloadItem {
                         time = System.currentTimeMillis();
                         // ...but not too often!
                         if ((time - lastNotifyTime) > notifyDelay) {
-                            lastSpeed = (downloadedSize - lastNotifySize) / (time - lastNotifyTime);
+                            lastSpeed = (downloadedSize - lastNotifySize) / ((time - lastNotifyTime) / 1000);
                             lastNotifyTime = time;
                             lastNotifySize = downloadedSize;
                             listener.downloadItemChanged(this);
