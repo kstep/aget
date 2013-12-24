@@ -16,19 +16,6 @@ import com.googlecode.androidannotations.annotations.*;
 @EBean
 class DownloadItem {
 
-	public DownloadItem setIgnoreCertificate(boolean ignoreCertificate) {
-		this.ignoreCertificate = ignoreCertificate;
-		return this;
-	}
-
-	public DownloadItem setIgnoreCertificate() {
-		return setIgnoreCertificate(true);
-	}
-	
-	public boolean isIgnoreCertificate() {
-		return ignoreCertificate;
-	}
-
     interface Listener {
         void downloadItemChanged(DownloadItem item);
         void downloadItemFailed(DownloadItem item, Throwable e);
@@ -48,28 +35,27 @@ class DownloadItem {
         CANCELED,
     }
 
-	// main meta-data
+    // main meta-data
     private URL url = null;
-    private String fileName;
+    private String fileName = null;
     private String fileFolder = Environment.DIRECTORY_DOWNLOADS;
-	
-	// server provided data
-    private long totalSize = -1;
-	private String mimeType;
 
-	// download bookkeeping data
-    private long downloadedSize = 0;
+    // server provided data
+    private long totalSize = -1;
+    private String mimeType = null;
+
+    // download bookkeeping data
+    private HttpURLConnection connection = null;
     private Status status = Status.INITIAL;
+    private long downloadedSize = 0;
     private long lastSpeed = 0;
 
-    private HttpURLConnection connection = null;
-
-	// download configuration settings
+    // download configuration settings
     final static private long notifyDelay = 2000;
     final static private int bufferSize = 10*1024;
 
     private boolean continueDownload = true;
-	private boolean ignoreCertificate = true;
+    private boolean ignoreCertificate = true;
 
     public static DownloadItem fromUrl(String url, String fileName) throws MalformedURLException {
         return fromUrl(new URL(url), fileName);
@@ -123,7 +109,7 @@ class DownloadItem {
         return this;
     }
 
-    public boolean getContinue() {
+    public boolean isContinue() {
         return continueDownload;
     }
 
@@ -150,7 +136,7 @@ class DownloadItem {
         downloadedSize = 0;
         lastSpeed = 0;
 
-        // Declare connection service variables
+        // Reset connection service variables
         connection = null;
         BufferedInputStream in = null;
         BufferedOutputStream out = null;
@@ -163,14 +149,14 @@ class DownloadItem {
             boolean append = false;
             int success_code = HttpURLConnection.HTTP_OK;
 
-            connection = (HttpURLConnection) openConnection();
+            connection = openConnection();
 
             // File exists and we want to continue download, so
             // we make some preparations to download from last place.
-            if (continueDownload && localFile.exists()) {
-                downloadedSize = localFile.length();
+            if (isContinue() && localFile.exists()) {
                 append = true;
                 success_code = HttpURLConnection.HTTP_PARTIAL;
+                downloadedSize = localFile.length();
                 connection.setRequestProperty("Range", "bytes=" + downloadedSize + "-");
             }
 
@@ -183,23 +169,18 @@ class DownloadItem {
                 listener.downloadItemChanged(this);
             }
 
-            connection.connect(); // !!!
-
-            // Make sure server responded OK
-            int code = connection.getResponseCode();
-            if (code != success_code) {
-                throw new IOException(String.format("Invalid return code %d, expected %d", code, success_code));
-            }
+            connect(connection, success_code); // !!! Now network connection is available !!!
 
             // Calculate total size
             totalSize = connection.getContentLength();
             if (totalSize >= 0) {
                 totalSize += downloadedSize;
             }
-			
-			if (mimeType == null) {
-			    mimeType = guessMimeTypeFromConnection(connection, fileName, "application/octet-stream", false);
-			}
+
+            // Update MIME-type if not done before with fetchMetaData()
+            if (mimeType == null) {
+                mimeType = guessMimeTypeFromConnectionAndFileName(connection, fileName, "application/octet-stream", false);
+            }
 
             // Initialize streams...
             in = new BufferedInputStream(connection.getInputStream());
@@ -233,7 +214,7 @@ class DownloadItem {
             status = Status.FINISHED;
 
         } catch (IOException e) {
-            if (status != Status.CANCELED) {
+            if (status == Status.STARTED) {
                 android.util.Log.e("aGet", "Download error", e);
                 status = Status.FAILED;
                 if (listener != null) {
@@ -269,11 +250,24 @@ class DownloadItem {
         return new File(Environment.getExternalStoragePublicDirectory(getFileFolder()), getFileName());
     }
 
-    private URLConnection openConnection() throws IOException {
+    private HttpURLConnection openConnection() throws IOException {
         return openConnection("GET");
     }
 
-    private URLConnection openConnection(String method) throws IOException {
+    private HttpURLConnection connect(HttpURLConnection conn, int expectedCode) throws IOException {
+        conn.connect();
+        int code = conn.getResponseCode();
+        if (code != expectedCode) {
+            throw new IOException(String.format("Invalid return code %d, expected %d", code, expectedCode));
+        }
+        return conn;
+    }
+
+    private HttpURLConnection connect(HttpURLConnection conn) throws IOException {
+        return connect(conn, HttpURLConnection.HTTP_OK);
+    }
+
+    private HttpURLConnection openConnection(String method) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod(method);
@@ -307,16 +301,12 @@ class DownloadItem {
         HttpURLConnection conn = null;
 
         try {
-            conn = (HttpURLConnection) openConnection("HEAD");
-            conn.connect();
-
-            assert conn.getResponseCode() == HttpURLConnection.HTTP_OK;
-            fileName = guessFileNameFromConnection(conn, fileName);
+            conn = connect(openConnection("HEAD"));
 
             totalSize = conn.getContentLength();
-			
-			mimeType = guessMimeTypeFromConnection(conn, fileName, mimeType, false);
-			fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
+            fileName = guessFileNameFromConnection(conn, fileName);
+            mimeType = guessMimeTypeFromConnectionAndFileName(conn, fileName, mimeType, false);
+            fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
 
         } catch (IOException e) {
             android.util.Log.w("DownloadItem", "ERROR", e);
@@ -327,20 +317,20 @@ class DownloadItem {
         }
     }
 
-	private String guessMimeTypeFromConnection(URLConnection conn, String fileName, String def, boolean useContent) {
-		String mimeType = conn.getContentType();
-		if (mimeType == null && fileName != null) {
-			mimeType = conn.guessContentTypeFromName(fileName);
-		}
-		if (mimeType == null && useContent) {
-			try {
-				mimeType = conn.guessContentTypeFromStream(conn.getInputStream());
-			} catch (IOException e) {
-				mimeType = null;
-			}
-		}
-		return mimeType == null? def: mimeType;
-	}
+    private String guessMimeTypeFromConnectionAndFileName(URLConnection conn, String fileName, String def, boolean useContent) {
+        String mimeType = conn.getContentType();
+        if (mimeType == null && fileName != null) {
+            mimeType = URLConnection.guessContentTypeFromName(fileName);
+        }
+        if (mimeType == null && useContent) {
+            try {
+                mimeType = URLConnection.guessContentTypeFromStream(conn.getInputStream());
+            } catch (IOException e) {
+                mimeType = null;
+            }
+        }
+        return mimeType == null? def: mimeType;
+    }
 
     private String guessFileNameFromConnection(URLConnection conn, String fileName) {
         String header = conn.getHeaderField("Content-Disposition");
@@ -354,13 +344,13 @@ class DownloadItem {
 
         return fileName;
     }
-	
-	private String guessFileFolderFromMimeType(String mimeType, String def) {
-		return mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
-		       mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
-			   mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
-			   def;
-	}
+
+    private String guessFileFolderFromMimeType(String mimeType, String def) {
+        return mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
+               mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
+               mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
+               def;
+    }
 
     private String getFileNameFromHeader(String header, String def) {
         int p = header.indexOf("name=");
@@ -376,10 +366,8 @@ class DownloadItem {
 
     public DownloadItem cancelDownload(boolean deleteLocalFile) {
         status = Status.CANCELED;
-        if (connection != null) {
-            connection.disconnect();
-            connection = null;
-        }
+        dropDownloadConnection();
+
         if (deleteLocalFile) {
             getFile().delete();
         }
@@ -388,6 +376,19 @@ class DownloadItem {
 
     public DownloadItem cancelDownload() {
         return cancelDownload(false);
+    }
+
+    public DownloadItem pauseDownload() {
+        status = Status.PAUSED;
+        dropDownloadConnection();
+        return this;
+    }
+
+    private void dropDownloadConnection() {
+        if (connection != null) {
+            connection.disconnect();
+            connection = null;
+        }
     }
 
     public DownloadItem startDownload(Listener listener) {
@@ -402,6 +403,23 @@ class DownloadItem {
     public DownloadItem setFileFolder(String folder) {
         this.fileFolder = folder;
         return this;
+    }
+
+    public DownloadItem setIgnoreCertificate(boolean ignoreCertificate) {
+        this.ignoreCertificate = ignoreCertificate;
+        return this;
+    }
+
+    public DownloadItem setIgnoreCertificate() {
+        return setIgnoreCertificate(true);
+    }
+
+    public boolean isIgnoreCertificate() {
+        return ignoreCertificate;
+    }
+
+    public String getMimeType() {
+        return mimeType;
     }
 
     @Override

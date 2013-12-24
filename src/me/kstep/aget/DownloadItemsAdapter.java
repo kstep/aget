@@ -43,6 +43,12 @@ class DownloadItemsAdapter extends BaseAdapter {
             }
         });
 
+        downloadView.downloadPause.setOnClickListener(new View.OnClickListener () {
+            public void onClick(View view) {
+                mainActivity.downloadPause(item);
+            }
+        });
+
         return downloadView;
     }
 

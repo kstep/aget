@@ -70,7 +70,7 @@ class AddDownloadItemFragment extends DialogFragment {
         if (item == null) return;
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
-        downloadContinue.setChecked(item.getContinue());
+        downloadContinue.setChecked(item.isContinue());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
     }
 

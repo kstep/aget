@@ -81,6 +81,12 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         downloadList.requestFocusFromTouch();
     }
 
+    void downloadPause(DownloadItem item) {
+        item.pauseDownload();
+        adapter.notifyDataSetChanged();
+        downloadList.requestFocusFromTouch();
+    }
+
     void downloadEnqueue(DownloadItem item) {
         adapter.addItem(item);
         downloadList.requestFocusFromTouch();
