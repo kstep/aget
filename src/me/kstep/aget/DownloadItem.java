@@ -172,7 +172,7 @@ class DownloadItem {
             connect(connection, success_code); // !!! Now network connection is available !!!
 
             // Calculate total size
-            totalSize = connection.getContentLength();
+            totalSize = getContentLengthFromConnection(connection);
             if (totalSize >= 0) {
                 totalSize += downloadedSize;
             }
@@ -303,7 +303,7 @@ class DownloadItem {
         try {
             conn = connect(openConnection("HEAD"));
 
-            totalSize = conn.getContentLength();
+            totalSize = getContentLengthFromConnection(conn);
             fileName = guessFileNameFromConnection(conn, fileName);
             mimeType = guessMimeTypeFromConnectionAndFileName(conn, fileName, mimeType, false);
             fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
@@ -341,6 +341,15 @@ class DownloadItem {
 
         android.util.Log.d("aGetGuessWork", "Resulting MIME: " + (mimeType == null? "default": mimeType));
         return mimeType == null? def: mimeType;
+    }
+
+    private long getContentLengthFromConnection(URLConnection conn) {
+        String length = conn.getHeaderField("Content-Length");
+        try {
+            return length == null? -1: Long.parseLong(length, 10);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     private String guessFileNameFromConnection(URLConnection conn, String fileName) {
