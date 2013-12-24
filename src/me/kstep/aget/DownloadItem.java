@@ -47,19 +47,6 @@ class DownloadItem {
     final static private int bufferSize = 10*1024;
     private boolean continueDownload = true;
 
-    DownloadItem setContinue() {
-        return setContinue(true);
-    }
-
-    DownloadItem setContinue(boolean value) {
-        continueDownload = value;
-        return this;
-    }
-
-    boolean getContinue() {
-        return continueDownload;
-    }
-
     public static DownloadItem fromUrl(String url, String fileName) throws MalformedURLException {
         return fromUrl(new URL(url), fileName);
     }
@@ -101,6 +88,19 @@ class DownloadItem {
 
     public URL getUrl() {
         return url;
+    }
+
+    public DownloadItem setContinue() {
+        return setContinue(true);
+    }
+
+    public DownloadItem setContinue(boolean value) {
+        continueDownload = value;
+        return this;
+    }
+
+    public boolean getContinue() {
+        return continueDownload;
     }
 
     public DownloadItem setUrl(URL url) {
@@ -316,13 +316,20 @@ class DownloadItem {
         return header;
     }
 
-    public DownloadItem cancelDownload() {
+    public DownloadItem cancelDownload(boolean deleteLocalFile) {
         status = Status.CANCELED;
         if (connection != null) {
             connection.disconnect();
             connection = null;
         }
+        if (deleteLocalFile) {
+            getFile().delete();
+        }
         return this;
+    }
+
+    public DownloadItem cancelDownload() {
+        return cancelDownload(false);
     }
 
     public DownloadItem startDownload(Listener listener) {
