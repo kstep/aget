@@ -49,7 +49,7 @@ public class DownloadItemView extends RelativeLayout {
         long totalSize = item.getTotalSize();
         long downloadedSize = item.getDownloadedSize();
         long lastSpeed = item.getLastSpeed();
-        long percent = totalSize == 0? -1: downloadedSize * 100 / totalSize;
+        long percent = totalSize <= 0? -1: downloadedSize * 100 / totalSize;
         DownloadItem.Status status = item.getStatus();
 
         downloadFilename.setText(item.getFileName());

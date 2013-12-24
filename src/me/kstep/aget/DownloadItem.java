@@ -164,10 +164,15 @@ class DownloadItem {
 
             // Make sure server responded OK
             int code = connection.getResponseCode();
-            assert code == success_code;
+            if (code != success_code) {
+                throw new IOException(String.format("Invalid return code %d, expected %d", code, success_code));
+            }
 
             // Calculate total size
-            totalSize = downloadedSize + connection.getContentLength();
+            totalSize = connection.getContentLength();
+            if (totalSize >= 0) {
+                totalSize += downloadedSize;
+            }
 
             // Initialize streams...
             in = new BufferedInputStream(connection.getInputStream());
