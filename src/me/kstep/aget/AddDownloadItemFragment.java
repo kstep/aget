@@ -13,6 +13,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.view.View;
+import java.net.MalformedURLException;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadItemFragment extends DialogFragment {
@@ -74,12 +75,14 @@ class AddDownloadItemFragment extends DialogFragment {
         });
         downloadEnqueueBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
+				submit();
                 activity.downloadEnqueue(item);
                 dismiss();
             }
         });
         downloadStartBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
+				submit();
                 activity.downloadEnqueue(item);
                 activity.downloadStart(item);
                 dismiss();
@@ -106,4 +109,17 @@ class AddDownloadItemFragment extends DialogFragment {
     void bind(DownloadItem item) {
         this.item = item;
     }
+	
+	void submit(DownloadItem item) {
+		try {
+			item.setUrl(downloadUrl.getText().toString());
+		    item.setFileName(downloadName.getText().toString());
+			item.setContinue(downloadContinue.isChecked());
+			//item.setFileFolder();
+		} catch (MalformedURLException e) {}
+	}
+	
+	void submit() {
+		submit(item);
+	}
 }
