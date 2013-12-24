@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.ListView;
 import com.googlecode.androidannotations.annotations.*;
 import java.net.MalformedURLException;
+import android.widget.Toast;
 
 @EActivity(R.layout.main)
 public class MainActivity extends Activity implements DownloadItem.Listener {
@@ -40,7 +41,7 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
                 ClipData clip = clipboard.getPrimaryClip();
                 if (clip != null) {
-                    adapter.add(clip.getItemAt(0).coerceToText(this).toString());
+                    adapter.addItem(clip.getItemAt(0).coerceToText(this).toString());
                 }
 
                 return true;
@@ -50,36 +51,28 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         }
     }
 
-    public void downloadStart(View button) {
-        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
-        downloadItem(item);
-    }
-
-    public void downloadCancel(View button) {
-        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
-        item.setStatus(DownloadItem.Status.CANCELED);
-    }
-
-    public void downloadPause(View button) {
-        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
-        item.setStatus(DownloadItem.Status.PAUSED);
-    }
-
-    public void downloadReload(View button) {
-        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
-    }
-
     @UiThread
     public void downloadItemChanged(DownloadItem item) {
         adapter.notifyDataSetChanged();
         downloadList.requestFocusFromTouch();
     }
 
+    @UiThread
+    public void downloadItemFailed(DownloadItem item, Throwable e) {
+        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
     @Background
-    void downloadItem(DownloadItem item) {
+    void downloadStart(DownloadItem item) {
         item.fetchFileName();
         downloadItemChanged(item);
-        item.download(this);
+        item.startDownload(this);
+    }
+
+    void downloadCancel(DownloadItem item) {
+        item.cancelDownload();
+        adapter.removeItem(item);
+        downloadList.requestFocusFromTouch();
     }
 
 }

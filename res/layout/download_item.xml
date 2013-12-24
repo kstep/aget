@@ -20,7 +20,6 @@
 
     <Button
         android:id="@+id/downloadCancel"
-        android:onClick="downloadCancel"
         android:background="@drawable/ic_action_cancel"
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -30,7 +29,6 @@
         />
     <Button
         android:id="@+id/downloadStart"
-        android:onClick="downloadStart"
         android:background="@drawable/ic_action_play"
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -40,7 +38,6 @@
         />
     <Button
         android:id="@+id/downloadPause"
-        android:onClick="downloadPause"
         android:background="@drawable/ic_action_pause"
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -50,7 +47,6 @@
         />
     <Button
         android:id="@+id/downloadReload"
-        android:onClick="downloadReload"
         android:background="@drawable/ic_action_replay"
         android:layout_width="30dp"
         android:layout_height="30dp"

@@ -17,6 +17,9 @@ class DownloadItemsAdapter extends BaseAdapter {
     @RootContext
     Context context;
 
+    @RootContext
+    MainActivity mainActivity;
+
     @AfterInject
     void initAdapter() {
         items = new LinkedList<DownloadItem>();
@@ -25,8 +28,32 @@ class DownloadItemsAdapter extends BaseAdapter {
     @Override
     public View getView(int pos, View view, ViewGroup parent) {
         DownloadItemView downloadView = view == null? DownloadItemView_.build(context): (DownloadItemView) view;
-        downloadView.bind(getItem(pos));
+        final DownloadItem item = getItem(pos);
+        downloadView.bind(item);
+
+        downloadView.downloadCancel.setOnClickListener(new View.OnClickListener () {
+            public void onClick(View view) {
+                mainActivity.downloadCancel(item);
+            }
+        });
+
+        downloadView.downloadStart.setOnClickListener(new View.OnClickListener () {
+            public void onClick(View view) {
+                mainActivity.downloadStart(item);
+            }
+        });
+
         return downloadView;
+    }
+
+    public void removeItem(DownloadItem item) {
+        items.remove(item);
+        notifyDataSetChanged();
+    }
+
+    public void removeItem(int pos) {
+        items.remove(pos);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -57,19 +84,19 @@ class DownloadItemsAdapter extends BaseAdapter {
         return value + suffixes[index];
     }
 
-    public void add(DownloadItem item) {
+    public void addItem(DownloadItem item) {
         items.add(item);
         notifyDataSetChanged();
     }
 
-    public void add(String url) {
+    public void addItem(String url) {
         try {
-            add(new DownloadItem(url));
+            addItem(DownloadItem.init(url));
         } catch (MalformedURLException e) {
         }
     }
 
-    public void add(URL url) {
-        add(new DownloadItem(url));
+    public void addItem(URL url) {
+        addItem(DownloadItem.init(url));
     }
 }

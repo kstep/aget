@@ -11,11 +11,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import com.googlecode.androidannotations.annotations.*;
 
+@EBean
 class DownloadItem {
 
     interface Listener {
         void downloadItemChanged(DownloadItem item);
+        void downloadItemFailed(DownloadItem item, Throwable e);
     }
 
     // INITIAL -> STARTED
@@ -32,13 +35,14 @@ class DownloadItem {
         CANCELED,
     }
 
-    private URL url;
+    private URL url = null;
     private String fileName;
     private long totalSize = -1;
     private long downloadedSize = 0;
     private boolean isRemoteFileName = false;
     private Status status = Status.INITIAL;
     private long lastSpeed = 0;
+    private HttpURLConnection connection = null;
 
     final static private long notifyDelay = 2000;
     final static private int bufferSize = 10*1024;
@@ -57,21 +61,23 @@ class DownloadItem {
         return continueDownload;
     }
 
-    DownloadItem(String url, String fileName) throws MalformedURLException {
-        this(new URL(url), fileName);
+    public static DownloadItem init(String url, String fileName) throws MalformedURLException {
+        return init(new URL(url), fileName);
     }
 
-    DownloadItem(String url) throws MalformedURLException {
-        this(new URL(url));
+    public static DownloadItem init(String url) throws MalformedURLException {
+        return init(new URL(url));
     }
 
-    DownloadItem(URL url) {
-        this(url, new File(url.getPath()).getName());
+    public static DownloadItem init(URL url) {
+        return init(url, new File(url.getPath()).getName());
     }
 
-    DownloadItem(URL url, String fileName) {
-        this.url = url;
-        this.fileName = fileName;
+    public static DownloadItem init(URL url, String fileName) {
+        DownloadItem item = new DownloadItem();
+        item.setUrl(url);
+        item.setFileName(fileName);
+        return item;
     }
 
     public Status getStatus() {
@@ -98,16 +104,33 @@ class DownloadItem {
         return url;
     }
 
-    DownloadItem download(Listener listener) {
-        // Declare connection service variables
-        HttpURLConnection conn = null;
-        BufferedInputStream in = null;
-        BufferedOutputStream out = null;
+    DownloadItem setUrl(URL url) {
+        if (status == Status.STARTED) {
+            throw new IllegalStateException("Downloading is in progress");
+        }
+        this.url = url;
+        return this;
+    }
+
+    DownloadItem setUrl(String url) throws MalformedURLException {
+        return setUrl(new URL(url));
+    }
+
+    @Background
+    void download(Listener listener) {
+        if (status == Status.STARTED) {
+            throw new IllegalStateException("Downloading is in progress");
+        }
 
         // Reset download status
         status = Status.STARTED;
         downloadedSize = 0;
         lastSpeed = 0;
+
+        // Declare connection service variables
+        connection = null;
+        BufferedInputStream in = null;
+        BufferedOutputStream out = null;
 
         // Get local file
         File localFile = getFile();
@@ -117,7 +140,7 @@ class DownloadItem {
             boolean append = false;
             int success_code = HttpURLConnection.HTTP_OK;
 
-            conn = (HttpURLConnection) openConnection();
+            connection = (HttpURLConnection) openConnection();
 
             // File exists and we want to continue download, so
             // we make some preparations to download from last place.
@@ -125,7 +148,7 @@ class DownloadItem {
                 downloadedSize = localFile.length();
                 append = true;
                 success_code = HttpURLConnection.HTTP_PARTIAL;
-                conn.setRequestProperty("Range", "bytes=" + downloadedSize + "-");
+                connection.setRequestProperty("Range", "bytes=" + downloadedSize + "-");
             }
 
             // First listener notification.
@@ -137,17 +160,17 @@ class DownloadItem {
                 listener.downloadItemChanged(this);
             }
 
-            conn.connect(); // !!!
+            connection.connect(); // !!!
 
             // Make sure server responded OK
-            int code = conn.getResponseCode();
+            int code = connection.getResponseCode();
             assert code == success_code;
 
             // Calculate total size
-            totalSize = downloadedSize + conn.getContentLength();
+            totalSize = downloadedSize + connection.getContentLength();
 
             // Initialize streams...
-            in = new BufferedInputStream(conn.getInputStream());
+            in = new BufferedInputStream(connection.getInputStream());
             out = new BufferedOutputStream(new FileOutputStream(localFile, append));
 
             // ...and buffers
@@ -178,13 +201,19 @@ class DownloadItem {
             status = Status.FINISHED;
 
         } catch (IOException e) {
-            android.util.Log.e("aGet", "Download error", e);
-            status = Status.FAILED;
+            if (status != Status.CANCELED) {
+                android.util.Log.e("aGet", "Download error", e);
+                status = Status.FAILED;
+                if (listener != null) {
+                    listener.downloadItemFailed(this, e);
+                }
+            }
 
         } finally {
             // Cleanup
-            if (conn != null) {
-                conn.disconnect();
+            if (connection != null) {
+                connection.disconnect();
+                connection = null;
             }
             if (in != null) {
                 try {
@@ -202,14 +231,6 @@ class DownloadItem {
         if (listener != null) {
             listener.downloadItemChanged(this);
         }
-
-        return this;
-    }
-
-    // TODO
-    DownloadItem setStatus(Status status) {
-        this.status = status;
-        return this;
     }
 
     File getFile() {
@@ -230,6 +251,9 @@ class DownloadItem {
     }
 
     DownloadItem setFileName(String fileName) {
+        if (status == Status.STARTED) {
+            throw new IllegalStateException("Downloading is in progress");
+        }
         this.fileName = fileName;
         return this;
     }
@@ -240,6 +264,10 @@ class DownloadItem {
     }
 
     String fetchFileName() {
+        if (status == Status.STARTED) {
+            throw new IllegalStateException("Downloading is in progress");
+        }
+
         if (isRemoteFileName) {
             return fileName;
         }
@@ -292,5 +320,19 @@ class DownloadItem {
         }
 
         return header;
+    }
+
+    public DownloadItem cancelDownload() {
+        status = Status.CANCELED;
+        if (connection != null) {
+            connection.disconnect();
+            connection = null;
+        }
+        return this;
+    }
+
+    public DownloadItem startDownload(Listener listener) {
+        download(listener);
+        return this;
     }
 }
