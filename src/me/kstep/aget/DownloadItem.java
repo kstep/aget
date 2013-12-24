@@ -2,19 +2,21 @@ package me.kstep.aget;
 
 import android.content.Context;
 import android.os.Environment;
+import com.googlecode.androidannotations.annotations.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import com.googlecode.androidannotations.annotations.*;
 
 @EBean
-class DownloadItem {
+class DownloadItem implements Serializable {
+    private static final long serialVersionUID = 0L;
 
     interface Listener {
         void downloadItemChanged(DownloadItem item);

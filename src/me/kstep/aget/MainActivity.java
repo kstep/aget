@@ -12,6 +12,10 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 
 @EActivity(R.layout.main)
@@ -34,6 +38,30 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         Uri uri = getIntent().getData();
         if (uri != null) {
             downloadAdd(uri.toString());
+        }
+    }
+
+    @AfterInject
+    void loadDownloadsList() {
+        try {
+            ObjectInputStream io = new ObjectInputStream(openFileInput("downloadItems.bin"));
+            adapter.loadFromStream(io);
+
+        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        try {
+            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloadItems.bin", MODE_PRIVATE));
+            adapter.saveToStream(io);
+
+        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
         }
     }
 

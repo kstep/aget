@@ -5,10 +5,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import com.googlecode.androidannotations.annotations.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
+import java.io.OptionalDataException;
+import java.io.IOException;
 
 @EBean
 class DownloadItemsAdapter extends BaseAdapter {
@@ -23,6 +27,24 @@ class DownloadItemsAdapter extends BaseAdapter {
     @AfterInject
     void initAdapter() {
         items = new LinkedList<DownloadItem>();
+    }
+
+    @SuppressWarnings("unchecked")
+    public void loadFromStream(ObjectInputStream is) {
+        try {
+            items = (List<DownloadItem>) is.readObject();
+            notifyDataSetChanged();
+        } catch (OptionalDataException e) {
+        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
+        }
+    }
+
+    public void saveToStream(ObjectOutputStream os) {
+        try {
+            os.writeObject(items);
+        } catch (IOException e) {
+        }
     }
 
     @Override
