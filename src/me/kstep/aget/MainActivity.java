@@ -1,57 +1,78 @@
 package me.kstep.aget;
 
-import android.app.DownloadManager;
-import android.app.ListActivity;
+import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ListAdapter;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.ListView;
 import com.googlecode.androidannotations.annotations.*;
 import java.net.MalformedURLException;
-import android.view.View;
 
 @EActivity(R.layout.main)
-public class MainActivity extends ListActivity implements DownloadItem.Listener {
+public class MainActivity extends Activity implements DownloadItem.Listener {
+
+    @Bean
+    DownloadItemsAdapter adapter;
+
+    @ViewById
+    ListView downloadList;
+
+    @AfterViews
+    void bindAdapter() {
+        downloadList.setAdapter(adapter);
+    }
 
     @Override
-    protected void onCreate(Bundle state) {
-        super.onCreate(state);
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
-        DownloadItem[] items = new DownloadItem[1];
-        DownloadItem item;
-        try {
-            items[0] = new DownloadItem("http://192.168.0.105:8080/Elementary.S02E10.rus.LostFilm.TV.avi");
-        } catch (MalformedURLException e) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.downloadAdd:
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+                ClipData clip = clipboard.getPrimaryClip();
+                if (clip != null) {
+                    adapter.add(clip.getItemAt(0).coerceToText(this).toString());
+                }
+
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        ListAdapter adapter = new DownloadItemsAdapter(this, items);
-        setListAdapter(adapter);
     }
 
     public void downloadStart(View button) {
-        DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
+        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
         downloadItem(item);
     }
 
     public void downloadCancel(View button) {
-        DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
+        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
         item.setStatus(DownloadItem.Status.CANCELED);
     }
 
     public void downloadPause(View button) {
-        DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
+        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
         item.setStatus(DownloadItem.Status.PAUSED);
     }
 
     public void downloadReload(View button) {
-        DownloadItem item = (DownloadItem) ((View) button.getParent()).getTag();
+        DownloadItem item = ((DownloadItemView) button.getParent()).getBoundItem();
     }
 
     @UiThread
     public void downloadItemChanged(DownloadItem item) {
-        ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
-        getListView().requestFocusFromTouch();
+        adapter.notifyDataSetChanged();
+        downloadList.requestFocusFromTouch();
     }
 
     @Background

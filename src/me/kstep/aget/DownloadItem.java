@@ -1,21 +1,16 @@
 package me.kstep.aget;
 
-import android.app.DownloadManager;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Environment;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
-import java.util.Map;
 
 class DownloadItem {
 
@@ -41,7 +36,6 @@ class DownloadItem {
     private String fileName;
     private long totalSize = -1;
     private long downloadedSize = 0;
-    private long downloadId;
     private boolean isRemoteFileName = false;
     private Status status = Status.INITIAL;
     private long lastSpeed = 0;
@@ -55,8 +49,12 @@ class DownloadItem {
     }
 
     DownloadItem setContinue(boolean value) {
-        this.continueDownload = value;
+        continueDownload = value;
         return this;
+    }
+
+    boolean getContinue() {
+        return continueDownload;
     }
 
     DownloadItem(String url, String fileName) throws MalformedURLException {
@@ -98,37 +96,6 @@ class DownloadItem {
 
     URL getUrl() {
         return url;
-    }
-
-    Uri getUri() {
-        return Uri.parse(url.toString());
-    }
-
-    DownloadManager.Request getDownloadRequest() {
-        DownloadManager.Request request = new DownloadManager.Request(getUri());
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
-        request.allowScanningByMediaScanner();
-        return request;
-    }
-
-    DownloadItem startDownload(Context context) {
-        return startDownload((DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE));
-    }
-
-    DownloadItem setDownloadId(long id) {
-        this.downloadId = id;
-        return this;
-    }
-
-    long getDownloadId() {
-        return this.downloadId;
-    }
-
-    DownloadItem startDownload(DownloadManager manager) {
-        //downloadId = manager.enqueue(getDownloadRequest());
-        return this;
     }
 
     DownloadItem download(Listener listener) {
@@ -239,6 +206,7 @@ class DownloadItem {
         return this;
     }
 
+    // TODO
     DownloadItem setStatus(Status status) {
         this.status = status;
         return this;
