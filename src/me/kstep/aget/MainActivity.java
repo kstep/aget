@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import android.widget.Toast;
 
 @EActivity(R.layout.main)
+@OptionsMenu(R.menu.main_activity_actions)
 public class MainActivity extends Activity implements DownloadItem.Listener {
 
     @Bean
@@ -27,36 +28,21 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         downloadList.setAdapter(adapter);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_activity_actions, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.downloadAdd:
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
-                ClipData clip = clipboard.getPrimaryClip();
-                DownloadItem downloadItem = new DownloadItem();
-                if (clip != null) {
-                    try {
-                        downloadItem.setUrl(clip.getItemAt(0).coerceToText(this).toString()).setFileName();
-                    } catch (MalformedURLException e) {
-                    }
-                }
-
-                AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
-                addDownloadDialog.bind(downloadItem);
-                addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
-
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+    @OptionsItem
+    void downloadAdd() {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+        ClipData clip = clipboard.getPrimaryClip();
+        DownloadItem downloadItem = new DownloadItem();
+        if (clip != null) {
+            try {
+                downloadItem.setUrl(clip.getItemAt(0).coerceToText(this).toString()).setFileName();
+            } catch (MalformedURLException e) {
+            }
         }
+
+        AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
+        addDownloadDialog.bind(downloadItem);
+        addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
     }
 
     @UiThread
