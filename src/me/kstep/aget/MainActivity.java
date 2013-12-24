@@ -3,17 +3,19 @@ package me.kstep.aget;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import java.net.MalformedURLException;
-import android.widget.Toast;
 
 @EActivity(R.layout.main)
+@OptionsMenu(R.menu.main_activity_actions)
 public class MainActivity extends Activity implements DownloadItem.Listener {
 
     @Bean
@@ -27,36 +29,34 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         downloadList.setAdapter(adapter);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_activity_actions, menu);
-        return super.onCreateOptionsMenu(menu);
+    @AfterViews
+    void processIntentUri() {
+        Uri uri = getIntent().getData();
+        if (uri != null) {
+            downloadAdd(uri.toString());
+        }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.downloadAdd:
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
-                ClipData clip = clipboard.getPrimaryClip();
-                DownloadItem downloadItem = new DownloadItem();
-                if (clip != null) {
-                    try {
-                        downloadItem.setUrl(clip.getItemAt(0).coerceToText(this).toString()).setFileName();
-                    } catch (MalformedURLException e) {
-                    }
-                }
+    @OptionsItem
+    void downloadAdd() {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+        ClipData clip = clipboard.getPrimaryClip();
+        String uri = clip == null? null: clip.getItemAt(0).coerceToText(this).toString();
+        downloadAdd(uri);
+    }
 
-                AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
-                addDownloadDialog.bind(downloadItem);
-                addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
-
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+    void downloadAdd(String url) {
+        DownloadItem downloadItem = new DownloadItem();
+        if (url != null) {
+            try {
+                downloadItem.setUrl(url).setFileName();
+            } catch (MalformedURLException e) {
+            }
         }
+
+        AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
+        addDownloadDialog.bind(downloadItem);
+        addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
     }
 
     @UiThread

@@ -4,6 +4,8 @@
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:showDividers="middle"
+    android:divider="?android:attr/dividerHorizontal"
     >
 
     <RelativeLayout
@@ -17,6 +19,8 @@
             android:hint="URL"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:singleLine="true"
+            android:inputType="textUri"
             />
         <Button
             android:id="@+id/fetchName"
@@ -35,6 +39,7 @@
             android:layout_below="@id/downloadUrl"
             android:layout_toLeftOf="@id/fetchName"
             android:layout_alignBottom="@id/fetchName"
+            android:singleLine="true"
             />
         <Spinner
             android:id="@+id/downloadFolder"
