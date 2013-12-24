@@ -49,11 +49,11 @@ public class DownloadItemView extends RelativeLayout {
         long totalSize = item.getTotalSize();
         long downloadedSize = item.getDownloadedSize();
         long lastSpeed = item.getLastSpeed();
-        float percent = downloadedSize * 100 / totalSize;
+        long percent = totalSize == 0? -1: downloadedSize * 100 / totalSize;
         DownloadItem.Status status = item.getStatus();
 
         downloadFilename.setText(item.getFileName());
-        downloadInfo.setText(String.format("%s/%s — %s/s — %3.1f%%", humanize(downloadedSize), humanize(totalSize), humanize(lastSpeed), percent));
+        downloadInfo.setText(String.format("%s/%s — %s/s — %d%%", humanize(downloadedSize), humanize(totalSize), humanize(lastSpeed), percent));
 
         downloadProgress.setIndeterminate(false);
         switch (status) {
