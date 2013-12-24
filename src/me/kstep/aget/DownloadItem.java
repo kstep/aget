@@ -318,10 +318,19 @@ class DownloadItem {
     }
 
     private String guessMimeTypeFromConnectionAndFileName(URLConnection conn, String fileName, String def, boolean useContent) {
-        String mimeType = conn.getContentType();
-        if (mimeType == null && fileName != null) {
+        android.util.Log.d("aGetGuessWork", "Default MIME: " + (def == null? "None": def));
+        String mimeType = null;
+
+        if (fileName != null) {
             mimeType = URLConnection.guessContentTypeFromName(fileName);
+            android.util.Log.d("aGetGuessWork", "MIME from filename " + fileName + ": " + (mimeType == null? "None": mimeType));
         }
+
+        if (mimeType == null) {
+            mimeType = conn.getContentType();
+            android.util.Log.d("aGetGuessWork", "MIME from header: " + (mimeType == null? "None": mimeType));
+        }
+
         if (mimeType == null && useContent) {
             try {
                 mimeType = URLConnection.guessContentTypeFromStream(conn.getInputStream());
@@ -329,6 +338,8 @@ class DownloadItem {
                 mimeType = null;
             }
         }
+
+        android.util.Log.d("aGetGuessWork", "Resulting MIME: " + (mimeType == null? "default": mimeType));
         return mimeType == null? def: mimeType;
     }
 
