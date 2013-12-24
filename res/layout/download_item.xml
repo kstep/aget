@@ -16,6 +16,9 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:gravity="fill_horizontal|left|center_vertical"
+        android:singleLine="true"
+        android:ellipsize="middle"
+        android:maxWidth="250dp"
         />
 
     <Button
