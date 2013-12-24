@@ -86,16 +86,21 @@ public class DownloadItemView extends RelativeLayout {
         }
     }
 
-    private String humanize(long value) {
+    private String humanize(String format, long value) {
         String[] suffixes = {"b", "K", "M", "G", "T"};
         String suffix;
         int index = 0;
+        float fvalue = (float) value;
 
-        while (value > 1024 && index < suffixes.length) {
-            value /= 1024;
+        while (fvalue > 1024 && index < suffixes.length) {
+            fvalue /= 1024;
             index++;
         }
 
-        return value + suffixes[index];
+        return String.format(format, fvalue, suffixes[index]);
+    }
+
+    private String humanize(long value) {
+        return humanize("%3.2f%s", value);
     }
 }
