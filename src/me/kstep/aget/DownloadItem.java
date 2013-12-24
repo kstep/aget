@@ -16,6 +16,19 @@ import com.googlecode.androidannotations.annotations.*;
 @EBean
 class DownloadItem {
 
+	public DownloadItem setIgnoreCertificate(boolean ignoreCertificate) {
+		this.ignoreCertificate = ignoreCertificate;
+		return this;
+	}
+
+	public DownloadItem setIgnoreCertificate() {
+		return setIgnoreCertificate(true);
+	}
+	
+	public boolean isIgnoreCertificate() {
+		return ignoreCertificate;
+	}
+
     interface Listener {
         void downloadItemChanged(DownloadItem item);
         void downloadItemFailed(DownloadItem item, Throwable e);
@@ -35,18 +48,28 @@ class DownloadItem {
         CANCELED,
     }
 
+	// main meta-data
     private URL url = null;
     private String fileName;
     private String fileFolder = Environment.DIRECTORY_DOWNLOADS;
+	
+	// server provided data
     private long totalSize = -1;
+	private String mimeType;
+
+	// download bookkeeping data
     private long downloadedSize = 0;
     private Status status = Status.INITIAL;
     private long lastSpeed = 0;
+
     private HttpURLConnection connection = null;
 
+	// download configuration settings
     final static private long notifyDelay = 2000;
     final static private int bufferSize = 10*1024;
+
     private boolean continueDownload = true;
+	private boolean ignoreCertificate = true;
 
     public static DownloadItem fromUrl(String url, String fileName) throws MalformedURLException {
         return fromUrl(new URL(url), fileName);
@@ -173,6 +196,11 @@ class DownloadItem {
             if (totalSize >= 0) {
                 totalSize += downloadedSize;
             }
+			
+			mimeType = connection.getContentType();
+			if (mimeType == null) {
+				mimeType = "application/octet-stream";
+			}
 
             // Initialize streams...
             in = new BufferedInputStream(connection.getInputStream());
@@ -272,7 +300,7 @@ class DownloadItem {
         return getFileName();
     }
 
-    String fetchFileName() {
+    void fetchMetaData() {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");
         }
@@ -289,6 +317,12 @@ class DownloadItem {
             if (totalSize == -1) {
                 totalSize = conn.getContentLength();
             }
+			
+			mimeType = conn.getContentType();
+			if (mimeType == null) {
+				mimeType = conn.guessContentTypeFromName(fileName);
+			}
+			fileFolder = guessFileFolderFromMimeType(mimeType);
 
         } catch (IOException e) {
             android.util.Log.w("DownloadItem", "ERROR", e);
@@ -297,8 +331,6 @@ class DownloadItem {
                 conn.disconnect();
             }
         }
-
-        return fileName;
     }
 
     private String guessFileNameFromConnection(URLConnection conn, String fileName) {
@@ -313,6 +345,13 @@ class DownloadItem {
 
         return fileName;
     }
+	
+	private String guessFileFolderFromMimeType(String mimeType) {
+		return mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
+		       mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
+			   mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
+			   Environment.DIRECTORY_DOWNLOADS;
+	}
 
     private String getFileNameFromHeader(String header, String def) {
         int p = header.indexOf("name=");

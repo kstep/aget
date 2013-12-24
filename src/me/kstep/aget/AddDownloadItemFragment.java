@@ -56,6 +56,7 @@ class AddDownloadItemFragment extends DialogFragment {
     }
 
     @AfterViews
+	@UiThread
     void initBinding() {
         if (item == null) return;
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
@@ -90,19 +91,15 @@ class AddDownloadItemFragment extends DialogFragment {
         });
         fetchName.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
-                fetchDownloadName();
+                fetchMetaData();
             }
         });
     }
 
-    @UiThread
-    void setDownloadName(String name) {
-        downloadName.setText(name);
-    }
-
     @Background
-    void fetchDownloadName() {
-        setDownloadName(item.fetchFileName());
+    void fetchMetaData() {
+        item.fetchMetaData();
+		initBinding();
     }
 
     DownloadItem item = null;
