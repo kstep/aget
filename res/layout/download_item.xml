@@ -73,6 +73,15 @@
         />
 
     <TextView
+        android:id="@+id/downloadSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/downloadCancel"
+        android:layout_alignLeft="@id/downloadProgress"
+        android:paddingTop="10dp"
+        android:textSize="12sp"
+        />
+    <TextView
         android:id="@+id/downloadInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
