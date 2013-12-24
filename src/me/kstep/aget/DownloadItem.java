@@ -197,9 +197,8 @@ class DownloadItem {
                 totalSize += downloadedSize;
             }
 			
-			mimeType = connection.getContentType();
 			if (mimeType == null) {
-				mimeType = "application/octet-stream";
+			    mimeType = guessMimeTypeFromConnection(connection, fileName, "application/octet-stream", false);
 			}
 
             // Initialize streams...
@@ -314,15 +313,10 @@ class DownloadItem {
             assert conn.getResponseCode() == HttpURLConnection.HTTP_OK;
             fileName = guessFileNameFromConnection(conn, fileName);
 
-            if (totalSize == -1) {
-                totalSize = conn.getContentLength();
-            }
+            totalSize = conn.getContentLength();
 			
-			mimeType = conn.getContentType();
-			if (mimeType == null) {
-				mimeType = conn.guessContentTypeFromName(fileName);
-			}
-			fileFolder = guessFileFolderFromMimeType(mimeType);
+			mimeType = guessMimeTypeFromConnection(conn, fileName, mimeType, false);
+			fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
 
         } catch (IOException e) {
             android.util.Log.w("DownloadItem", "ERROR", e);
@@ -332,6 +326,21 @@ class DownloadItem {
             }
         }
     }
+
+	private String guessMimeTypeFromConnection(URLConnection conn, String fileName, String def, boolean useContent) {
+		String mimeType = conn.getContentType();
+		if (mimeType == null && fileName != null) {
+			mimeType = conn.guessContentTypeFromName(fileName);
+		}
+		if (mimeType == null && useContent) {
+			try {
+				mimeType = conn.guessContentTypeFromStream(conn.getInputStream());
+			} catch (IOException e) {
+				mimeType = null;
+			}
+		}
+		return mimeType == null? def: mimeType;
+	}
 
     private String guessFileNameFromConnection(URLConnection conn, String fileName) {
         String header = conn.getHeaderField("Content-Disposition");
@@ -346,11 +355,11 @@ class DownloadItem {
         return fileName;
     }
 	
-	private String guessFileFolderFromMimeType(String mimeType) {
+	private String guessFileFolderFromMimeType(String mimeType, String def) {
 		return mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
 		       mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
 			   mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
-			   Environment.DIRECTORY_DOWNLOADS;
+			   def;
 	}
 
     private String getFileNameFromHeader(String header, String def) {
