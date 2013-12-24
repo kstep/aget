@@ -61,19 +61,19 @@ class DownloadItem {
         return continueDownload;
     }
 
-    public static DownloadItem init(String url, String fileName) throws MalformedURLException {
-        return init(new URL(url), fileName);
+    public static DownloadItem fromUrl(String url, String fileName) throws MalformedURLException {
+        return fromUrl(new URL(url), fileName);
     }
 
-    public static DownloadItem init(String url) throws MalformedURLException {
-        return init(new URL(url));
+    public static DownloadItem fromUrl(String url) throws MalformedURLException {
+        return fromUrl(new URL(url));
     }
 
-    public static DownloadItem init(URL url) {
-        return init(url, new File(url.getPath()).getName());
+    public static DownloadItem fromUrl(URL url) {
+        return fromUrl(url, new File(url.getPath()).getName());
     }
 
-    public static DownloadItem init(URL url, String fileName) {
+    public static DownloadItem fromUrl(URL url, String fileName) {
         DownloadItem item = new DownloadItem();
         item.setUrl(url);
         item.setFileName(fileName);
@@ -96,15 +96,15 @@ class DownloadItem {
         return lastSpeed;
     }
 
-    String getFileName() {
+    public String getFileName() {
         return fileName;
     }
 
-    URL getUrl() {
+    public URL getUrl() {
         return url;
     }
 
-    DownloadItem setUrl(URL url) {
+    public DownloadItem setUrl(URL url) {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");
         }
@@ -112,7 +112,7 @@ class DownloadItem {
         return this;
     }
 
-    DownloadItem setUrl(String url) throws MalformedURLException {
+    public DownloadItem setUrl(String url) throws MalformedURLException {
         return setUrl(new URL(url));
     }
 
@@ -233,15 +233,15 @@ class DownloadItem {
         }
     }
 
-    File getFile() {
+    public File getFile() {
         return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), getFileName());
     }
 
-    URLConnection openConnection() throws IOException {
+    private URLConnection openConnection() throws IOException {
         return openConnection("GET");
     }
 
-    URLConnection openConnection(String method) throws IOException {
+    private URLConnection openConnection(String method) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod(method);
@@ -250,7 +250,7 @@ class DownloadItem {
         return conn;
     }
 
-    DownloadItem setFileName(String fileName) {
+    public DownloadItem setFileName(String fileName) {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");
         }
@@ -334,5 +334,15 @@ class DownloadItem {
     public DownloadItem startDownload(Listener listener) {
         download(listener);
         return this;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return (other instanceof DownloadItem) && url.equals(((DownloadItem) other).getUrl());
+    }
+
+    @Override
+    public int hashCode() {
+        return url.hashCode();
     }
 }

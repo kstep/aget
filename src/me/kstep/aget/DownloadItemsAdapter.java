@@ -85,18 +85,20 @@ class DownloadItemsAdapter extends BaseAdapter {
     }
 
     public void addItem(DownloadItem item) {
-        items.add(item);
-        notifyDataSetChanged();
+        if (!items.contains(item)) {
+            items.add(item);
+            notifyDataSetChanged();
+        }
     }
 
     public void addItem(String url) {
         try {
-            addItem(DownloadItem.init(url));
+            addItem(DownloadItem.fromUrl(url));
         } catch (MalformedURLException e) {
         }
     }
 
     public void addItem(URL url) {
-        addItem(DownloadItem.init(url));
+        addItem(DownloadItem.fromUrl(url));
     }
 }
