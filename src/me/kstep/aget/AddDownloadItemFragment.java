@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.view.View;
 import java.net.MalformedURLException;
+import android.os.Environment;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadItemFragment extends DialogFragment {
@@ -42,6 +43,14 @@ class AddDownloadItemFragment extends DialogFragment {
     @ViewById
     Button fetchName;
 
+    final private static String[] FOLDERS = {
+        Environment.DIRECTORY_DOWNLOADS,
+        Environment.DIRECTORY_MOVIES,
+        Environment.DIRECTORY_MUSIC,
+        Environment.DIRECTORY_PICTURES,
+        Environment.DIRECTORY_PODCASTS,
+    };
+
     @AfterViews
     void initSpinner() {
         final String[] folders = {
@@ -61,6 +70,7 @@ class AddDownloadItemFragment extends DialogFragment {
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
         downloadContinue.setChecked(item.getContinue());
+        downloadFolder.setSelection(getFolderId(item.getFileFolder()));
     }
 
     @AfterViews
@@ -75,14 +85,14 @@ class AddDownloadItemFragment extends DialogFragment {
         });
         downloadEnqueueBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
-				submit();
+                submit();
                 activity.downloadEnqueue(item);
                 dismiss();
             }
         });
         downloadStartBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
-				submit();
+                submit();
                 activity.downloadEnqueue(item);
                 activity.downloadStart(item);
                 dismiss();
@@ -109,17 +119,34 @@ class AddDownloadItemFragment extends DialogFragment {
     void bind(DownloadItem item) {
         this.item = item;
     }
-	
-	void submit(DownloadItem item) {
-		try {
-			item.setUrl(downloadUrl.getText().toString());
-		    item.setFileName(downloadName.getText().toString());
-			item.setContinue(downloadContinue.isChecked());
-			//item.setFileFolder();
-		} catch (MalformedURLException e) {}
-	}
-	
-	void submit() {
-		submit(item);
-	}
+
+    void submit(DownloadItem item) {
+        try {
+            item.setUrl(downloadUrl.getText().toString());
+            item.setFileName(downloadName.getText().toString());
+            item.setContinue(downloadContinue.isChecked());
+            item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
+        } catch (MalformedURLException e) {}
+    }
+
+    void submit() {
+        submit(item);
+    }
+
+    String getFolderHandle(int id) {
+        try {
+            return FOLDERS[id];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return Environment.DIRECTORY_DOWNLOADS;
+        }
+    }
+
+    int getFolderId(String folder) {
+        for (int index = 0; index < FOLDERS.length; index++) {
+            if (FOLDERS[index] == folder) {
+                return index;
+            }
+        }
+        return 0;
+    }
 }

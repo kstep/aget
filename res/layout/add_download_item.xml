@@ -19,6 +19,7 @@
             android:hint="URL"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:singleLine="true"
             />
         <Button
             android:id="@+id/fetchName"
@@ -37,6 +38,7 @@
             android:layout_below="@id/downloadUrl"
             android:layout_toLeftOf="@id/fetchName"
             android:layout_alignBottom="@id/fetchName"
+            android:singleLine="true"
             />
         <Spinner
             android:id="@+id/downloadFolder"
