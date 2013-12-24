@@ -39,7 +39,6 @@ class DownloadItem {
     private String fileName;
     private long totalSize = -1;
     private long downloadedSize = 0;
-    private boolean isRemoteFileName = false;
     private Status status = Status.INITIAL;
     private long lastSpeed = 0;
     private HttpURLConnection connection = null;
@@ -268,10 +267,6 @@ class DownloadItem {
             throw new IllegalStateException("Downloading is in progress");
         }
 
-        if (isRemoteFileName) {
-            return fileName;
-        }
-
         HttpURLConnection conn = null;
 
         try {
@@ -280,7 +275,6 @@ class DownloadItem {
 
             assert conn.getResponseCode() == HttpURLConnection.HTTP_OK;
             fileName = guessFileNameFromConnection(conn, fileName);
-            isRemoteFileName = true;
 
             if (totalSize == -1) {
                 totalSize = conn.getContentLength();
