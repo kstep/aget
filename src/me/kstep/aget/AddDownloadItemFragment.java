@@ -85,17 +85,23 @@ class AddDownloadItemFragment extends DialogFragment {
         });
         downloadEnqueueBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
-                submit();
-                activity.downloadEnqueue(item);
-                dismiss();
+                try {
+                    submit();
+                    activity.downloadEnqueue(item);
+                    dismiss();
+                } catch (MalformedURLException e) {
+                }
             }
         });
         downloadStartBtn.setOnClickListener(new View.OnClickListener () {
             public void onClick(View view) {
-                submit();
-                activity.downloadEnqueue(item);
-                activity.downloadStart(item);
-                dismiss();
+                try {
+                    submit();
+                    activity.downloadEnqueue(item);
+                    activity.downloadStart(item);
+                    dismiss();
+                } catch (MalformedURLException e) {
+                }
             }
         });
         fetchName.setOnClickListener(new View.OnClickListener () {
@@ -120,16 +126,14 @@ class AddDownloadItemFragment extends DialogFragment {
         this.item = item;
     }
 
-    void submit(DownloadItem item) {
-        try {
-            item.setUrl(downloadUrl.getText().toString());
-            item.setFileName(downloadName.getText().toString());
-            item.setContinue(downloadContinue.isChecked());
-            item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
-        } catch (MalformedURLException e) {}
+    void submit(DownloadItem item) throws MalformedURLException {
+        item.setUrl(downloadUrl.getText().toString());
+        item.setFileName(downloadName.getText().toString());
+        item.setContinue(downloadContinue.isChecked());
+        item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
     }
 
-    void submit() {
+    void submit() throws MalformedURLException {
         submit(item);
     }
 

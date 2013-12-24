@@ -3,15 +3,16 @@ package me.kstep.aget;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import java.net.MalformedURLException;
-import android.widget.Toast;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
@@ -28,14 +29,27 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         downloadList.setAdapter(adapter);
     }
 
+    @AfterViews
+    void processIntentUri() {
+        Uri uri = getIntent().getData();
+        if (uri != null) {
+            downloadAdd(uri.toString());
+        }
+    }
+
     @OptionsItem
     void downloadAdd() {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
         ClipData clip = clipboard.getPrimaryClip();
+        String uri = clip == null? null: clip.getItemAt(0).coerceToText(this).toString();
+        downloadAdd(uri);
+    }
+
+    void downloadAdd(String url) {
         DownloadItem downloadItem = new DownloadItem();
-        if (clip != null) {
+        if (url != null) {
             try {
-                downloadItem.setUrl(clip.getItemAt(0).coerceToText(this).toString()).setFileName();
+                downloadItem.setUrl(url).setFileName();
             } catch (MalformedURLException e) {
             }
         }
