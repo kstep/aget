@@ -40,9 +40,17 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
             case R.id.downloadAdd:
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
                 ClipData clip = clipboard.getPrimaryClip();
+                DownloadItem downloadItem = new DownloadItem();
                 if (clip != null) {
-                    adapter.addItem(clip.getItemAt(0).coerceToText(this).toString());
+                    try {
+                        downloadItem.setUrl(clip.getItemAt(0).coerceToText(this).toString()).setFileName();
+                    } catch (MalformedURLException e) {
+                    }
                 }
+
+                AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
+                addDownloadDialog.bind(downloadItem);
+                addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
 
                 return true;
 
@@ -64,8 +72,6 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
 
     @Background
     void downloadStart(DownloadItem item) {
-        item.fetchFileName();
-        downloadItemChanged(item);
         item.startDownload(this);
     }
 
@@ -75,4 +81,8 @@ public class MainActivity extends Activity implements DownloadItem.Listener {
         downloadList.requestFocusFromTouch();
     }
 
+    void downloadEnqueue(DownloadItem item) {
+        adapter.addItem(item);
+        downloadList.requestFocusFromTouch();
+    }
 }

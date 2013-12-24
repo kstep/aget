@@ -37,6 +37,7 @@ class DownloadItem {
 
     private URL url = null;
     private String fileName;
+    private String fileFolder = Environment.DIRECTORY_DOWNLOADS;
     private long totalSize = -1;
     private long downloadedSize = 0;
     private Status status = Status.INITIAL;
@@ -233,7 +234,7 @@ class DownloadItem {
     }
 
     public File getFile() {
-        return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), getFileName());
+        return new File(Environment.getExternalStoragePublicDirectory(getFileFolder()), getFileName());
     }
 
     private URLConnection openConnection() throws IOException {
@@ -255,6 +256,10 @@ class DownloadItem {
         }
         this.fileName = fileName;
         return this;
+    }
+
+    public DownloadItem setFileName() {
+        return setFileName(new File(url.getPath()).getName());
     }
 
     @Override
@@ -334,6 +339,15 @@ class DownloadItem {
 
     public DownloadItem startDownload(Listener listener) {
         download(listener);
+        return this;
+    }
+
+    public String getFileFolder() {
+        return fileFolder;
+    }
+
+    public DownloadItem setFileFolder(String folder) {
+        this.fileFolder = folder;
         return this;
     }
 

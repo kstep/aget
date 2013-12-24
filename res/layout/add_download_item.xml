@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    >
+
+    <RelativeLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:padding="10dp"
+        >
+
+        <EditText
+            android:id="@+id/downloadUrl"
+            android:hint="URL"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            />
+        <Button
+            android:id="@+id/fetchName"
+            style="?android:attr/buttonStyleSmall"
+            android:text="Fetch"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@id/downloadUrl"
+            android:layout_alignParentRight="true"
+            />
+        <EditText
+            android:id="@+id/downloadName"
+            android:hint="File Name"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_below="@id/downloadUrl"
+            android:layout_toLeftOf="@id/fetchName"
+            android:layout_alignBottom="@id/fetchName"
+            />
+        <Spinner
+            android:id="@+id/downloadFolder"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_below="@id/downloadName"
+            />
+        <CheckBox
+            android:id="@+id/downloadContinue"
+            android:text="Continue download"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_below="@id/downloadFolder"
+            />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_below="@id/downloadContinue"
+        android:orientation="horizontal"
+        style="?android:attr/buttonBarStyle"
+        >
+        <Button
+            android:id="@+id/downloadStartBtn"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="Download"
+            />
+        <Button
+            android:id="@+id/downloadEnqueueBtn"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="Enqueue"
+            />
+        <Button
+            android:id="@+id/downloadCancelBtn"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="Cancel"
+            />
+    </LinearLayout>
+
+</LinearLayout>
