@@ -308,6 +308,7 @@ class DownloadItem implements Serializable {
             throw new IllegalStateException("Downloading is in progress");
         }
         this.fileName = fileName;
+        updateInfoFromFile();
         return this;
     }
 
@@ -334,6 +335,7 @@ class DownloadItem implements Serializable {
             fileName = guessFileNameFromConnection(conn, fileName);
             mimeType = guessMimeTypeFromConnectionAndFileName(conn, fileName, mimeType, false);
             fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
+            updateInfoFromFile();
 
         } catch (IOException e) {
             android.util.Log.w("DownloadItem", "ERROR", e);
@@ -462,6 +464,7 @@ class DownloadItem implements Serializable {
 
     public DownloadItem setFileFolder(String folder) {
         this.fileFolder = folder;
+        updateInfoFromFile();
         return this;
     }
 
@@ -510,5 +513,11 @@ class DownloadItem implements Serializable {
     @Override
     public int hashCode() {
         return url.hashCode();
+    }
+
+    private void updateInfoFromFile() {
+        File file = getFile();
+        downloadedSize = continueDownload && file.exists()? file.length(): 0;
+        status = downloadedSize >= totalSize? Status.FINISHED: Status.INITIAL;
     }
 }
