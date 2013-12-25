@@ -5,10 +5,17 @@
     android:layout_height="fill_parent"
     >
 
-    <ListView android:id="@+id/downloadList"
+    <ListView android:id="@android:id/list"
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        />
+
+    <TextView android:id="@android:id/empty"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:text="No download items"
+        android:gravity="center"
         />
 </LinearLayout>
 

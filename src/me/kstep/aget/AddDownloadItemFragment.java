@@ -1,20 +1,22 @@
 package me.kstep.aget;
 
-import android.app.DialogFragment;
-import com.googlecode.androidannotations.annotations.*;
-import android.widget.Spinner;
-import android.content.Context;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.CheckBox;
-import android.app.Dialog;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.ListActivity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.widget.Button;
-import android.view.View;
-import java.net.MalformedURLException;
 import android.os.Environment;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.Toast;
+import com.googlecode.androidannotations.annotations.*;
+import java.net.MalformedURLException;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadItemFragment extends DialogFragment {
@@ -65,8 +67,10 @@ class AddDownloadItemFragment extends DialogFragment {
     }
 
     @AfterViews
-	@UiThread
+    @UiThread
     void initBinding() {
+        getDialog().setTitle("Add new download");
+
         if (item == null) return;
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
@@ -74,48 +78,45 @@ class AddDownloadItemFragment extends DialogFragment {
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
     }
 
-    @AfterViews
-    void initButtons() {
-        final MainActivity activity = (MainActivity) getActivity();
-
-        getDialog().setTitle("Add new download");
-        downloadCancelBtn.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                dismiss();
-            }
-        });
-        downloadEnqueueBtn.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                try {
-                    submit();
-                    activity.downloadEnqueue(item);
-                    dismiss();
-                } catch (MalformedURLException e) {
-                }
-            }
-        });
-        downloadStartBtn.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                try {
-                    submit();
-                    activity.downloadEnqueue(item);
-                    activity.downloadStart(item);
-                    dismiss();
-                } catch (MalformedURLException e) {
-                }
-            }
-        });
-        fetchName.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                fetchMetaData();
-            }
-        });
+    DownloadItemsAdapter getListAdapter() {
+        return (DownloadItemsAdapter) ((ListActivity) getActivity()).getListAdapter();
     }
 
+    @Click
+    void downloadCancelBtn() {
+        dismiss();
+    }
+
+    @Click
+    void downloadEnqueueBtn() {
+        try {
+            submit();
+            getListAdapter().addItem(item);
+            dismiss();
+
+        } catch (MalformedURLException e) {
+            Toast.makeText(getActivity(), "Invalid URL", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Click
+    void downloadStartBtn() {
+        try {
+            submit();
+            getListAdapter().addItem(item);
+            item.startDownload((DownloadItem.Listener) getActivity());
+            dismiss();
+
+        } catch (MalformedURLException e) {
+            Toast.makeText(getActivity(), "Invalid URL", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Click
     @Background
-    void fetchMetaData() {
+    void fetchName() {
         item.fetchMetaData();
-		initBinding();
+        initBinding();
     }
 
     DownloadItem item = null;

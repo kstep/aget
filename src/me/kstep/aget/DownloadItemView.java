@@ -1,9 +1,11 @@
 package me.kstep.aget;
 
+import android.app.ListActivity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -45,6 +47,40 @@ public class DownloadItemView extends RelativeLayout {
 
     public DownloadItemView(Context context) {
         super(context);
+    }
+
+    ListView getListView() {
+        return (ListView) getParent();
+    }
+
+    DownloadItem getListItem() {
+        return (DownloadItem) ((ListActivity) getContext()).getListAdapter().getItem(getListView().getPositionForView(this));
+    }
+
+    DownloadItemsAdapter getListAdapter() {
+        return (DownloadItemsAdapter) ((ListActivity) getContext()).getListAdapter();
+    }
+
+    @Click
+    @Background
+    void downloadStart(View view) {
+        getListItem().startDownload((DownloadItem.Listener) getContext());
+    }
+
+    @Click
+    void downloadCancel(View view) {
+        DownloadItem item = getListItem();
+        item.cancelDownload();
+        getListAdapter().removeItem(item);
+        requestFocusFromTouch();
+    }
+
+    @Click
+    void downloadPause(View view) {
+        DownloadItem item = getListItem();
+        item.pauseDownload();
+        bind(item);
+        requestFocusFromTouch();
     }
 
     @SuppressWarnings("fallthrough")
@@ -135,7 +171,7 @@ public class DownloadItemView extends RelativeLayout {
 
             if (value != 0) {
                 result += value + names[i];
-                if (++items > 2) {
+                if (++items > 1) {
                     break;
                 }
             }

@@ -52,25 +52,6 @@ class DownloadItemsAdapter extends BaseAdapter {
         DownloadItemView downloadView = view == null? DownloadItemView_.build(context): (DownloadItemView) view;
         final DownloadItem item = getItem(pos);
         downloadView.bind(item);
-
-        downloadView.downloadCancel.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                mainActivity.downloadCancel(item);
-            }
-        });
-
-        downloadView.downloadStart.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                mainActivity.downloadStart(item);
-            }
-        });
-
-        downloadView.downloadPause.setOnClickListener(new View.OnClickListener () {
-            public void onClick(View view) {
-                mainActivity.downloadPause(item);
-            }
-        });
-
         return downloadView;
     }
 

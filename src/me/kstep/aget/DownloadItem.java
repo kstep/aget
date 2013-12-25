@@ -324,7 +324,7 @@ class DownloadItem implements Serializable {
         String mimeType = null;
 
         if (fileName != null) {
-            mimeType = URLConnection.guessContentTypeFromName(fileName);
+            mimeType = URLConnection.guessContentTypeFromName("file:///" + fileName);
             android.util.Log.d("aGetGuessWork", "MIME from filename " + fileName + ": " + (mimeType == null? "None": mimeType));
         }
 
