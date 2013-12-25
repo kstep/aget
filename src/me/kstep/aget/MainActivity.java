@@ -117,7 +117,9 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         DownloadItem downloadItem = new DownloadItem();
         if (url != null) {
             try {
-                downloadItem.setUrl(url).setFileName();
+                downloadItem.setUrl(url)
+                    .setFileName()
+                    .setFileFolder();
             } catch (MalformedURLException e) {
             }
         }

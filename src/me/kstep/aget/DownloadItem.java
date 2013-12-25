@@ -477,6 +477,11 @@ class DownloadItem implements Serializable {
         return this;
     }
 
+    public DownloadItem setFileFolder() {
+        fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
+        return this;
+    }
+
     public DownloadItem setIgnoreCertificate(boolean ignoreCertificate) {
         this.ignoreCertificate = ignoreCertificate;
         return this;
