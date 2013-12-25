@@ -482,6 +482,26 @@ class DownloadItem implements Serializable {
         return mimeType;
     }
 
+    public int getProgressInt() {
+        return totalSize > 0? (int) (downloadedSize * 100 / totalSize): -1;
+    }
+
+    public float getProgress() {
+        return totalSize > 0? (float) (downloadedSize * 100.0 / totalSize): -1;
+    }
+
+    public long getLeftSize() {
+        return totalSize - downloadedSize;
+    }
+
+    public long getTimeLeft() {
+        return lastSpeed > 0? (totalSize - downloadedSize) / lastSpeed: -1;
+    }
+
+    public boolean isUnkownSize() {
+        return totalSize < 0;
+    }
+
     @Override
     public boolean equals(Object other) {
         return (other instanceof DownloadItem) && url.equals(((DownloadItem) other).getUrl());

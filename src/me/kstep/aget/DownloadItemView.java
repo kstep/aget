@@ -87,13 +87,13 @@ public class DownloadItemView extends RelativeLayout {
         long totalSize = item.getTotalSize();
         long downloadedSize = item.getDownloadedSize();
         long lastSpeed = item.getLastSpeed();
-        long percent = totalSize <= 0? -1: downloadedSize * 100 / totalSize;
-        long timeLeft = lastSpeed > 0? (totalSize - downloadedSize) / lastSpeed: -1;
+        int percent = item.getProgressInt();
+        long timeLeft = item.getTimeLeft();
         DownloadItem.Status status = item.getStatus();
 
         downloadFilename.setText(item.getFileName());
-        downloadSize.setText(String.format("%s/%s @ %s/s", humanize(downloadedSize), humanize(totalSize), humanize(lastSpeed)));
-        downloadInfo.setText(String.format("%s — %d%%", humanizeTime(timeLeft), percent));
+        downloadSize.setText(String.format("%s/%s @ %s/s", Util.humanizeSize(downloadedSize), Util.humanizeSize(totalSize), Util.humanizeSize(lastSpeed)));
+        downloadInfo.setText(String.format("%s | %d%%", Util.humanizeTime(timeLeft), percent));
 
         downloadProgress.setIndeterminate(false);
         switch (status) {
@@ -120,62 +120,10 @@ public class DownloadItemView extends RelativeLayout {
                 downloadStart.setVisibility(View.INVISIBLE);
                 downloadReload.setVisibility(View.INVISIBLE);
 
-                downloadProgress.setIndeterminate(totalSize < 0);
-                downloadProgress.setProgress((int) percent);
+                downloadProgress.setIndeterminate(item.isUnkownSize());
+                downloadProgress.setProgress(percent);
                 break;
         }
     }
 
-    private String humanize(String format, long value) {
-        String[] suffixes = {"b", "K", "M", "G", "T"};
-        String suffix;
-        int index = 0;
-        float fvalue = (float) value;
-
-        while (fvalue > 1024 && index < suffixes.length) {
-            fvalue /= 1024;
-            index++;
-        }
-
-        return String.format(format, fvalue, suffixes[index]);
-    }
-
-    private String humanize(long value) {
-        return humanize("%3.2f%s", value);
-    }
-
-    private String humanizeTime(long time) {
-        if (time <= 0) {
-            return "";
-        }
-
-        final long[] coeffs = {
-            86400L*7, // weeks
-            86400L, // days
-            3600L, // hours
-            60L, // minutes
-            1L, // seconds
-        };
-        final String[] names = {
-            "w", "d", "h", "m", "s",
-        };
-
-        int items = 0;
-        long value = 0;
-        String result = "";
-
-        for (int i = 0; i < coeffs.length; i++) {
-            value = time / coeffs[i];
-            time %= coeffs[i];
-
-            if (value != 0) {
-                result += value + names[i];
-                if (++items > 1) {
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
 }
