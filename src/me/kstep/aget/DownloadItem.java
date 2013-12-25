@@ -115,6 +115,9 @@ class DownloadItem implements Serializable {
     }
 
     public String getFileName() {
+        if (fileName == null || fileName == "") {
+            setFileName();
+        }
         return fileName;
     }
 
