@@ -115,7 +115,7 @@ class DownloadItem implements Serializable {
     }
 
     public String getFileName() {
-        if (fileName == null || fileName == "") {
+        if (fileName == null || "".equals(fileName)) {
             setFileName();
         }
         return fileName;
@@ -311,6 +311,7 @@ class DownloadItem implements Serializable {
             throw new IllegalStateException("Downloading is in progress");
         }
         this.fileName = fileName;
+        mimeType = guessMimeTypeFromFileName(fileName, mimeType);
         updateInfoFromFile();
         return this;
     }
@@ -349,12 +350,17 @@ class DownloadItem implements Serializable {
         }
     }
 
+    private String guessMimeTypeFromFileName(String fileName, String def) {
+        String mimeType = URLConnection.guessContentTypeFromName(fileName);
+        return mimeType == null? def: mimeType;
+    }
+
     private String guessMimeTypeFromConnectionAndFileName(URLConnection conn, String fileName, String def, boolean useContent) {
         android.util.Log.d("aGetGuessWork", "Default MIME: " + (def == null? "None": def));
         String mimeType = null;
 
         if (fileName != null) {
-            mimeType = URLConnection.guessContentTypeFromName("file:///" + fileName);
+            mimeType = URLConnection.guessContentTypeFromName(fileName);
             android.util.Log.d("aGetGuessWork", "MIME from filename " + fileName + ": " + (mimeType == null? "None": mimeType));
         }
 
