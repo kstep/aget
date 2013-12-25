@@ -2,7 +2,6 @@ package me.kstep.aget;
 
 import android.content.Context;
 import android.os.Environment;
-import com.googlecode.androidannotations.annotations.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -14,7 +13,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-@EBean
 class DownloadItem implements Serializable {
     private static final long serialVersionUID = 0L;
 
@@ -47,7 +45,7 @@ class DownloadItem implements Serializable {
     private String mimeType = null;
 
     // download bookkeeping data
-    private HttpURLConnection connection = null;
+    private Thread downloadThread = null;
     private Status status = Status.INITIAL;
     private long downloadedSize = 0;
     private long lastSpeed = 0;
@@ -59,23 +57,23 @@ class DownloadItem implements Serializable {
     private boolean continueDownload = true;
     private boolean ignoreCertificate = true;
 
-    public static DownloadItem fromUrl(String url, String fileName) throws MalformedURLException {
-        return fromUrl(new URL(url), fileName);
+    DownloadItem() {}
+
+    DownloadItem(String url, String fileName) throws MalformedURLException {
+        this(new URL(url), fileName);
     }
 
-    public static DownloadItem fromUrl(String url) throws MalformedURLException {
-        return fromUrl(new URL(url));
+    DownloadItem(String url) throws MalformedURLException {
+        this(new URL(url));
     }
 
-    public static DownloadItem fromUrl(URL url) {
-        return fromUrl(url, new File(url.getPath()).getName());
+    DownloadItem(URL url) {
+        this(url, new File(url.getPath()).getName());
     }
 
-    public static DownloadItem fromUrl(URL url, String fileName) {
-        DownloadItem item = new DownloadItem();
-        item.setUrl(url);
-        item.setFileName(fileName);
-        return item;
+    DownloadItem(URL url, String fileName) {
+        setUrl(url);
+        setFileName(fileName);
     }
 
     public Status getStatus() {
@@ -127,7 +125,6 @@ class DownloadItem implements Serializable {
         return setUrl(new URL(url));
     }
 
-    @Background
     void download(Listener listener) {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");
@@ -139,7 +136,7 @@ class DownloadItem implements Serializable {
         lastSpeed = 0;
 
         // Reset connection service variables
-        connection = null;
+        HttpURLConnection connection = null;
         BufferedInputStream in = null;
         BufferedOutputStream out = null;
 
@@ -209,6 +206,10 @@ class DownloadItem implements Serializable {
                             listener.downloadItemChanged(this);
                         }
                     }
+
+                    if (Thread.interrupted()) {
+                        throw new InterruptedException();
+                    }
                 }
             }
 
@@ -223,6 +224,8 @@ class DownloadItem implements Serializable {
                     listener.downloadItemFailed(this, e);
                 }
             }
+
+        } catch (InterruptedException e) {
 
         } finally {
             // Cleanup
@@ -388,7 +391,7 @@ class DownloadItem implements Serializable {
 
     public DownloadItem cancelDownload(boolean deleteLocalFile) {
         status = Status.CANCELED;
-        dropDownloadConnection();
+        stopDownload();
 
         if (deleteLocalFile) {
             getFile().delete();
@@ -402,19 +405,32 @@ class DownloadItem implements Serializable {
 
     public DownloadItem pauseDownload() {
         status = Status.PAUSED;
-        dropDownloadConnection();
+        stopDownload();
         return this;
     }
 
-    private void dropDownloadConnection() {
-        if (connection != null) {
-            connection.disconnect();
-            connection = null;
+    public DownloadItem stopDownload() {
+        if (downloadThread != null && !downloadThread.isInterrupted()) {
+            downloadThread.interrupt();
+            downloadThread = null;
+            System.gc();
         }
+        return this;
     }
 
-    public DownloadItem startDownload(Listener listener) {
-        download(listener);
+    public DownloadItem startDownload(final Listener listener) {
+        downloadThread = new Thread(new Runnable () {
+            @Override
+            public void run() {
+                try {
+                    download(listener);
+                } catch (RuntimeException e) {
+                    android.util.Log.e("DownloadItem", "Error while downloading", e);
+                }
+            }
+        });
+        
+        downloadThread.start();
         return this;
     }
 

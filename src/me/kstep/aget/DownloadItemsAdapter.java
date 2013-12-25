@@ -102,12 +102,12 @@ class DownloadItemsAdapter extends BaseAdapter {
 
     public void addItem(String url) {
         try {
-            addItem(DownloadItem.fromUrl(url));
+            addItem(new DownloadItem(url));
         } catch (MalformedURLException e) {
         }
     }
 
     public void addItem(URL url) {
-        addItem(DownloadItem.fromUrl(url));
+        addItem(new DownloadItem(url));
     }
 }

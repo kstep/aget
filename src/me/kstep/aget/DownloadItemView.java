@@ -62,7 +62,6 @@ public class DownloadItemView extends RelativeLayout {
     }
 
     @Click
-    @Background
     void downloadStart(View view) {
         getListItem().startDownload((DownloadItem.Listener) getContext());
     }
