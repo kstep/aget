@@ -532,6 +532,6 @@ class DownloadItem implements Serializable {
     private void updateInfoFromFile() {
         File file = getFile();
         downloadedSize = continueDownload && file.exists()? file.length(): 0;
-        status = downloadedSize >= totalSize? Status.FINISHED: Status.INITIAL;
+        status = totalSize > 0 && downloadedSize >= totalSize? Status.FINISHED: Status.INITIAL;
     }
 }
