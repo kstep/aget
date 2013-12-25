@@ -89,13 +89,13 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         downloadAdd(uri);
     }
 
-    @OptionsItem
-    void downloadPrefs() {
-        getFragmentManager().beginTransaction()
-            .add(android.R.id.content, new PreferencesFragment_())
-            .addToBackStack(null)
-            .commit();
-    }
+    //@OptionsItem
+    //void downloadPrefs() {
+        //getFragmentManager().beginTransaction()
+            //.add(android.R.id.content, new PreferencesFragment_())
+            //.addToBackStack(null)
+            //.commit();
+    //}
 
     @Override
     public void onBackPressed() {
