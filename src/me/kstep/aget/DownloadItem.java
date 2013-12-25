@@ -50,14 +50,35 @@ class DownloadItem implements Serializable {
     private long downloadedSize = 0;
     private long lastSpeed = 0;
 
-    // download configuration settings
+    // common download configuration settings
     final static private long notifyDelay = 2000;
-    final static private int bufferSize = 10*1024;
 
+    static private int bufferSize = 10*1024;
+    static private int readTimeout = 5000;
+    static private int connectTimeout = 2000;
+    static private boolean defaultContinueDownload = true;
+
+    public static void setReadTimeout(int value) {
+        readTimeout = value;
+    }
+    public static void setConnectTimeout(int value) {
+        connectTimeout = value;
+    }
+    public static void setBufferSize(int value) {
+        bufferSize = value;
+    }
+    public static void setDefaultContinue(boolean value) {
+        defaultContinueDownload = value;
+    }
+
+
+    // instance specific configuration settings
     private boolean continueDownload = true;
     private boolean ignoreCertificate = true;
 
-    DownloadItem() {}
+    DownloadItem() {
+        continueDownload = defaultContinueDownload;
+    }
 
     DownloadItem(String url, String fileName) throws MalformedURLException {
         this(new URL(url), fileName);
@@ -72,6 +93,7 @@ class DownloadItem implements Serializable {
     }
 
     DownloadItem(URL url, String fileName) {
+        this();
         setUrl(url);
         setFileName(fileName);
     }
@@ -276,8 +298,8 @@ class DownloadItem implements Serializable {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod(method);
-        conn.setConnectTimeout(2000);
-        conn.setReadTimeout(5000);
+        conn.setConnectTimeout(connectTimeout);
+        conn.setReadTimeout(readTimeout);
         return conn;
     }
 
