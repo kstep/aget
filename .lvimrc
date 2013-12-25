@@ -11,3 +11,5 @@ let $CLASSPATH = join(current_class_path + filter([
             \ ':')
 
 let g:syntastic_java_javac_options = '-Xlint -AandroidManifestFile=' . project_path . '/AndroidManifest.xml'
+
+set makeprg=make\ all
