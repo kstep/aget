@@ -58,14 +58,35 @@ class DownloadItem implements Serializable {
     private long downloadedSize = 0;
     private long lastSpeed = 0;
 
-    // download configuration settings
+    // common download configuration settings
     final static private long notifyDelay = 2000;
-    final static private int bufferSize = 10*1024;
 
+    static private int bufferSize = 10*1024;
+    static private int readTimeout = 5000;
+    static private int connectTimeout = 2000;
+    static private boolean defaultContinueDownload = true;
+
+    public static void setReadTimeout(int value) {
+        readTimeout = value;
+    }
+    public static void setConnectTimeout(int value) {
+        connectTimeout = value;
+    }
+    public static void setBufferSize(int value) {
+        bufferSize = value;
+    }
+    public static void setDefaultContinue(boolean value) {
+        defaultContinueDownload = value;
+    }
+
+
+    // instance specific configuration settings
     private boolean continueDownload = true;
     private boolean ignoreCertificate = true;
 
-    DownloadItem() {}
+    DownloadItem() {
+        continueDownload = defaultContinueDownload;
+    }
 
     DownloadItem(String url, String fileName) throws MalformedURLException {
         this(new URL(url), fileName);
@@ -80,6 +101,7 @@ class DownloadItem implements Serializable {
     }
 
     DownloadItem(URL url, String fileName) {
+        this();
         setUrl(url);
         setFileName(fileName);
     }
@@ -101,6 +123,9 @@ class DownloadItem implements Serializable {
     }
 
     public String getFileName() {
+        if (fileName == null || "".equals(fileName)) {
+            setFileName();
+        }
         return fileName;
     }
 
@@ -284,8 +309,8 @@ class DownloadItem implements Serializable {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod(method);
-        conn.setConnectTimeout(2000);
-        conn.setReadTimeout(5000);
+		conn.setConnectTimeout(connectTimeout);
+        conn.setReadTimeout(readTimeout);
 		
 		if (conn instanceof HttpsURLConnection && ignoreCertificate) {
 		    ((HttpsURLConnection) conn).setSSLSocketFactory(getTrustAllSocketFactory());
@@ -334,6 +359,8 @@ class DownloadItem implements Serializable {
             throw new IllegalStateException("Downloading is in progress");
         }
         this.fileName = fileName;
+        mimeType = guessMimeTypeFromFileName(fileName, mimeType);
+        updateInfoFromFile();
         return this;
     }
 
@@ -360,6 +387,7 @@ class DownloadItem implements Serializable {
             fileName = guessFileNameFromConnection(conn, fileName);
             mimeType = guessMimeTypeFromConnectionAndFileName(conn, fileName, mimeType, false);
             fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
+            updateInfoFromFile();
 
         } catch (IOException e) {
             android.util.Log.w("DownloadItem", "ERROR", e);
@@ -370,12 +398,17 @@ class DownloadItem implements Serializable {
         }
     }
 
+    private String guessMimeTypeFromFileName(String fileName, String def) {
+        String mimeType = URLConnection.guessContentTypeFromName(fileName);
+        return mimeType == null? def: mimeType;
+    }
+
     private String guessMimeTypeFromConnectionAndFileName(URLConnection conn, String fileName, String def, boolean useContent) {
         android.util.Log.d("aGetGuessWork", "Default MIME: " + (def == null? "None": def));
         String mimeType = null;
 
         if (fileName != null) {
-            mimeType = URLConnection.guessContentTypeFromName("file:///" + fileName);
+            mimeType = URLConnection.guessContentTypeFromName(fileName);
             android.util.Log.d("aGetGuessWork", "MIME from filename " + fileName + ": " + (mimeType == null? "None": mimeType));
         }
 
@@ -488,6 +521,12 @@ class DownloadItem implements Serializable {
 
     public DownloadItem setFileFolder(String folder) {
         this.fileFolder = folder;
+        updateInfoFromFile();
+        return this;
+    }
+
+    public DownloadItem setFileFolder() {
+        fileFolder = guessFileFolderFromMimeType(mimeType, fileFolder);
         return this;
     }
 
@@ -508,6 +547,26 @@ class DownloadItem implements Serializable {
         return mimeType;
     }
 
+    public int getProgressInt() {
+        return totalSize > 0? (int) (downloadedSize * 100 / totalSize): -1;
+    }
+
+    public float getProgress() {
+        return totalSize > 0? (float) (downloadedSize * 100.0 / totalSize): -1;
+    }
+
+    public long getLeftSize() {
+        return totalSize - downloadedSize;
+    }
+
+    public long getTimeLeft() {
+        return lastSpeed > 0? (totalSize - downloadedSize) / lastSpeed: -1;
+    }
+
+    public boolean isUnkownSize() {
+        return totalSize < 0;
+    }
+
     @Override
     public boolean equals(Object other) {
         return (other instanceof DownloadItem) && url.equals(((DownloadItem) other).getUrl());
@@ -516,5 +575,11 @@ class DownloadItem implements Serializable {
     @Override
     public int hashCode() {
         return url.hashCode();
+    }
+
+    private void updateInfoFromFile() {
+        File file = getFile();
+        downloadedSize = continueDownload && file.exists()? file.length(): 0;
+        status = totalSize > 0 && downloadedSize >= totalSize? Status.FINISHED: Status.INITIAL;
     }
 }

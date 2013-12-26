@@ -2,9 +2,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aget="http://schemas.android.com/apk/res-auto"
     >
+    <!--<item android:id="@+id/downloadPrefs"-->
+          <!--android:icon="@drawable/ic_action_settings"-->
+          <!--android:title="Settings"-->
+          <!--android:showAsAction="ifRoom"-->
+          <!--/>-->
     <item android:id="@+id/downloadAdd"
           android:icon="@drawable/ic_action_new"
-          android:title=""
+          android:title="Add new download"
           android:showAsAction="ifRoom"
           />
 </menu>

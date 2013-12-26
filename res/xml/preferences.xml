@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aget="http://schemas.android.com/apk/res/me.kstep.aget"
+    >
+
+    <Preference
+        android:title="Connection timeout"
+        android:key="connectTimeout"
+        android:defaultValue="2000"
+        />
+    <Preference
+        android:title="Read timeout"
+        android:key="readTimeout"
+        android:defaultValue="5000"
+        />
+    <Preference
+        android:title="Buffer size"
+        android:key="bufferSize"
+        android:defaultValue="10240"
+        />
+    <CheckBoxPreference
+        android:title="Continue downloads by default"
+        android:key="continueDownload"
+        android:defaultValue="true"
+        />
+
+</PreferenceScreen>
