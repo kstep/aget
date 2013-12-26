@@ -1,6 +1,5 @@
 package me.kstep.aget;
 
-import android.content.Context;
 import android.os.Environment;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -12,6 +11,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 class DownloadItem implements Serializable {
     private static final long serialVersionUID = 0L;
@@ -278,9 +286,49 @@ class DownloadItem implements Serializable {
         conn.setRequestMethod(method);
         conn.setConnectTimeout(2000);
         conn.setReadTimeout(5000);
+		
+		if (conn instanceof HttpsURLConnection && ignoreCertificate) {
+		    ((HttpsURLConnection) conn).setSSLSocketFactory(getTrustAllSocketFactory());
+		}
+
         return conn;
     }
+	
+	private SSLSocketFactory trustAllSocketFactory = null;
+	private SSLSocketFactory getTrustAllSocketFactory() {
+		if (trustAllSocketFactory == null) {
+			TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+					public X509Certificate[] getAcceptedIssuers() {
+						return null;
+					}
 
+					@Override
+					public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+						// Not implemented
+					}
+
+					@Override
+					public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+						// Not implemented
+					}
+				} };
+
+			try {
+				SSLContext sc = SSLContext.getInstance("TLS");
+
+				sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+				trustAllSocketFactory = sc.getSocketFactory();
+			} catch (KeyManagementException e) {
+				//e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				//e.printStackTrace();
+			}
+		}
+
+		return trustAllSocketFactory;
+	}
+	
     public DownloadItem setFileName(String fileName) {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");

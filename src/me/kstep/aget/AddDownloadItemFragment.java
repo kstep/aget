@@ -32,6 +32,9 @@ class AddDownloadItemFragment extends DialogFragment {
 
     @ViewById
     CheckBox downloadContinue;
+	
+	@ViewById
+	CheckBox downloadIgnoreCert;
 
     @ViewById
     Button downloadCancelBtn;
@@ -75,6 +78,7 @@ class AddDownloadItemFragment extends DialogFragment {
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
         downloadContinue.setChecked(item.isContinue());
+		downloadIgnoreCert.setChecked(item.isIgnoreCertificate());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
     }
 
@@ -128,6 +132,7 @@ class AddDownloadItemFragment extends DialogFragment {
         item.setUrl(downloadUrl.getText().toString());
         item.setFileName(downloadName.getText().toString());
         item.setContinue(downloadContinue.isChecked());
+		item.setIgnoreCertificate(item.isIgnoreCertificate());
         item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
     }
 

@@ -54,6 +54,13 @@
             android:layout_width="match_parent"
             android:layout_below="@id/downloadFolder"
             />
+		<CheckBox
+            android:id="@+id/downloadIgnoreCert"
+            android:text="Ignore SSL certificate"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_below="@id/downloadContinue"
+		/>
     </RelativeLayout>
 
     <LinearLayout
