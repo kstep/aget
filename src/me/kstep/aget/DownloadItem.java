@@ -1,6 +1,7 @@
 package me.kstep.aget;
 
 import android.os.Environment;
+import android.util.Base64;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -309,51 +310,55 @@ class DownloadItem implements Serializable {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod(method);
-		conn.setConnectTimeout(connectTimeout);
+        conn.setConnectTimeout(connectTimeout);
         conn.setReadTimeout(readTimeout);
-		
-		if (conn instanceof HttpsURLConnection && ignoreCertificate) {
-		    ((HttpsURLConnection) conn).setSSLSocketFactory(getTrustAllSocketFactory());
-		}
+
+        if (conn instanceof HttpsURLConnection && ignoreCertificate) {
+            ((HttpsURLConnection) conn).setSSLSocketFactory(getTrustAllSocketFactory());
+        }
+
+        if (url.getUserInfo() != null) {
+            conn.setRequestProperty("Authorization", "Basic " + Base64.encodeToString(url.getUserInfo().getBytes(), Base64.NO_WRAP));
+        }
 
         return conn;
     }
-	
-	private SSLSocketFactory trustAllSocketFactory = null;
-	private SSLSocketFactory getTrustAllSocketFactory() {
-		if (trustAllSocketFactory == null) {
-			TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-					public X509Certificate[] getAcceptedIssuers() {
-						return null;
-					}
 
-					@Override
-					public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// Not implemented
-					}
+    private SSLSocketFactory trustAllSocketFactory = null;
+    private SSLSocketFactory getTrustAllSocketFactory() {
+        if (trustAllSocketFactory == null) {
+            TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
 
-					@Override
-					public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// Not implemented
-					}
-				} };
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+                        // Not implemented
+                    }
 
-			try {
-				SSLContext sc = SSLContext.getInstance("TLS");
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+                        // Not implemented
+                    }
+                } };
 
-				sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            try {
+                SSLContext sc = SSLContext.getInstance("TLS");
 
-				trustAllSocketFactory = sc.getSocketFactory();
-			} catch (KeyManagementException e) {
-				//e.printStackTrace();
-			} catch (NoSuchAlgorithmException e) {
-				//e.printStackTrace();
-			}
-		}
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
 
-		return trustAllSocketFactory;
-	}
-	
+                trustAllSocketFactory = sc.getSocketFactory();
+            } catch (KeyManagementException e) {
+                //e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                //e.printStackTrace();
+            }
+        }
+
+        return trustAllSocketFactory;
+    }
+
     public DownloadItem setFileName(String fileName) {
         if (status == Status.STARTED) {
             throw new IllegalStateException("Downloading is in progress");
@@ -510,7 +515,7 @@ class DownloadItem implements Serializable {
                 }
             }
         });
-        
+
         downloadThread.start();
         return this;
     }
