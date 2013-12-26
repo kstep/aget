@@ -67,7 +67,7 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         }
     }
 
-    @AfterInject
+    @AfterViews
     void loadDownloadsList() {
         try {
             ObjectInputStream io = new ObjectInputStream(openFileInput("downloadItems.bin"));
@@ -85,10 +85,9 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         DownloadItem.setDefaultContinue(prefs.continueDownload().get());
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
 
+    @Override
+    protected void onPause() {
         try {
             ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloadItems.bin", MODE_PRIVATE));
             adapter.saveToStream(io);
@@ -96,6 +95,8 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         } catch (FileNotFoundException e) {
         } catch (IOException e) {
         }
+
+        super.onPause();
     }
 
     @OptionsItem
