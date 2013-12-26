@@ -40,6 +40,9 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     @Pref
     Preferences_ prefs;
 
+    @Extra(Intent.EXTRA_TEXT)
+    String sharedText;
+
     @AfterViews
     void bindAdapter() {
         setListAdapter(adapter);
@@ -48,9 +51,19 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
 
     @AfterViews
     void processIntentUri() {
-        Uri uri = getIntent().getData();
-        if (uri != null) {
-            downloadAdd(uri.toString());
+        Intent intent = getIntent();
+        String action = intent.getAction();
+
+        if (Intent.ACTION_SEND.equals(action)) {
+            if (sharedText != null && !"".equals(sharedText)) {
+                downloadAdd(sharedText);
+            }
+
+        } else if (Intent.ACTION_VIEW.equals(action)) {
+            String uri = intent.getDataString();
+            if (uri != null && !"".equals(uri)) {
+                downloadAdd(uri);
+            }
         }
     }
 

@@ -457,7 +457,8 @@ class DownloadItem implements Serializable {
     }
 
     private String guessFileFolderFromMimeType(String mimeType, String def) {
-        return mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
+        return mimeType == null? def:
+               mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
                mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
                mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
                def;
