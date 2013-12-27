@@ -1,7 +1,9 @@
 package me.kstep.aget;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.Button;
@@ -68,10 +70,35 @@ public class DownloadItemView extends RelativeLayout {
 
     @Click
     void downloadCancel(View view) {
-        DownloadItem item = getListItem();
-        item.cancelDownload();
-        getListAdapter().removeItem(item);
-        requestFocusFromTouch();
+        final DownloadItem item = getListItem();
+        final DownloadItemsAdapter adapter = getListAdapter();
+
+        new AlertDialog.Builder(getContext())
+            .setTitle("Remove download item?")
+            .setMessage("You can re-add the same URL again with “Continue download” option on to resume downloading.")
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            })
+            .setNeutralButton("Remove", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    item.cancelDownload();
+                    adapter.removeItem(item);
+                    requestFocusFromTouch();
+                }
+            })
+            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    item.cancelDownload(true);
+                    adapter.removeItem(item);
+                    requestFocusFromTouch();
+                }
+            })
+            .show();
     }
 
     @Click
