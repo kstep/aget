@@ -370,7 +370,8 @@ class DownloadItem implements Serializable {
     }
 
     public DownloadItem setFileName() {
-        return setFileName(new File(url.getPath()).getName());
+        String name = new File(url.getPath()).getName();
+        return setFileName(name == null || "".equals(name)? "index.html": name);
     }
 
     @Override
