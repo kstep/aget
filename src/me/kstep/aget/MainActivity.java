@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
@@ -24,12 +25,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
-import android.app.PendingIntent;
 import java.util.HashMap;
+import me.kstep.aget.downloader.DownloadManager;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
 public class MainActivity extends ListActivity implements DownloadItem.Listener {
+
+    @Bean
+    DownloadManager downloadManager;
 
     @Bean
     DownloadItemsAdapter adapter;

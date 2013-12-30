@@ -13,21 +13,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.io.OptionalDataException;
 import java.io.IOException;
+import me.kstep.aget.downloader.DownloadManager;
 
 @EBean
 class DownloadItemsAdapter extends BaseAdapter {
-    List<DownloadItem> items;
+    @Bean
+    DownloadManager items;
 
     @RootContext
     Context context;
 
     @RootContext
     MainActivity mainActivity;
-
-    @AfterInject
-    void initAdapter() {
-        items = new LinkedList<DownloadItem>();
-    }
 
     @SuppressWarnings("unchecked")
     public void loadFromStream(ObjectInputStream is) {
@@ -80,19 +77,6 @@ class DownloadItemsAdapter extends BaseAdapter {
         return pos;
     }
 
-    private String humanize(long value) {
-        String[] suffixes = {"b", "K", "M", "G", "T"};
-        String suffix;
-        int index = 0;
-
-        while (value > 1024 && index < suffixes.length) {
-            value /= 1024;
-            index++;
-        }
-
-        return value + suffixes[index];
-    }
-
     public void addItem(DownloadItem item) {
         if (!items.contains(item)) {
             items.add(item);
@@ -103,7 +87,7 @@ class DownloadItemsAdapter extends BaseAdapter {
     public void addItem(String url) {
         try {
             addItem(new DownloadItem(url));
-        } catch (MalformedURLException e) {
+        } catch (NullPointerException e) {
         }
     }
 
