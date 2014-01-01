@@ -1,4 +1,4 @@
-package me.kstep.aget.downloader;
+package me.kstep.downloader;
 
 import android.net.Uri;
 import android.util.Base64;
@@ -43,7 +43,7 @@ public class HttpDownloader extends Downloader {
     }
 
     @Override
-    protected void closeConnection() {
+    protected void closeConnection(InputStream is) {
         if (connection != null) {
             connection.disconnect();
             connection = null;

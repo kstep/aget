@@ -32,9 +32,9 @@ class AddDownloadItemFragment extends DialogFragment {
 
     @ViewById
     CheckBox downloadContinue;
-	
-	@ViewById
-	CheckBox downloadIgnoreCert;
+
+    @ViewById
+    CheckBox downloadIgnoreCert;
 
     @ViewById
     Button downloadCancelBtn;
@@ -78,12 +78,12 @@ class AddDownloadItemFragment extends DialogFragment {
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
         downloadContinue.setChecked(item.isContinue());
-		downloadIgnoreCert.setChecked(item.isIgnoreCertificate());
+        downloadIgnoreCert.setChecked(item.isIgnoreCertificate());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
     }
 
-    DownloadItemsAdapter getListAdapter() {
-        return (DownloadItemsAdapter) ((ListActivity) getActivity()).getListAdapter();
+    DownloadManagerAdapter getListAdapter() {
+        return (DownloadManagerAdapter) ((ListActivity) getActivity()).getListAdapter();
     }
 
     @Click
@@ -93,34 +93,23 @@ class AddDownloadItemFragment extends DialogFragment {
 
     @Click
     void downloadEnqueueBtn() {
-        try {
-            submit();
-            getListAdapter().addItem(item);
-            dismiss();
-
-        } catch (MalformedURLException e) {
-            Toast.makeText(getActivity(), "Invalid URL", Toast.LENGTH_LONG).show();
-        }
+        submit();
+        getListAdapter().addItem(item);
+        dismiss();
     }
 
     @Click
     void downloadStartBtn() {
-        try {
-            submit();
-            getListAdapter().addItem(item);
-            item.startDownload((DownloadItem.Listener) getActivity());
-            dismiss();
-
-        } catch (MalformedURLException e) {
-            Toast.makeText(getActivity(), "Invalid URL", Toast.LENGTH_LONG).show();
-        }
+        submit();
+        getListAdapter().addItem(item).start();
+        dismiss();
     }
 
     @Click
     @Background
     void fetchName() {
-        item.fetchMetaData();
-        initBinding();
+        //item.fetchMetaData();
+        //initBinding();
     }
 
     DownloadItem item = null;
@@ -128,15 +117,15 @@ class AddDownloadItemFragment extends DialogFragment {
         this.item = item;
     }
 
-    void submit(DownloadItem item) throws MalformedURLException {
-        item.setUrl(downloadUrl.getText().toString());
+    void submit(DownloadItem item) {
+        item.setUri(downloadUrl.getText().toString());
         item.setFileName(downloadName.getText().toString());
-        item.setContinue(downloadContinue.isChecked());
-		item.setIgnoreCertificate(item.isIgnoreCertificate());
+        //item.setContinue(downloadContinue.isChecked());
+        //item.setIgnoreCertificate(item.isIgnoreCertificate());
         item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
     }
 
-    void submit() throws MalformedURLException {
+    void submit() {
         submit(item);
     }
 

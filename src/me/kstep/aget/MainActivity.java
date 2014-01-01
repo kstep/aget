@@ -26,17 +26,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.util.HashMap;
-import me.kstep.aget.downloader.DownloadManager;
+import me.kstep.downloader.Download;
+import me.kstep.downloader.Downloader;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
-public class MainActivity extends ListActivity implements DownloadItem.Listener {
+public class MainActivity extends ListActivity implements Download.Listener {
 
     @Bean
-    DownloadManager downloadManager;
-
-    @Bean
-    DownloadItemsAdapter adapter;
+    DownloadManagerAdapter adapter;
 
     @SystemService
     NotificationManager notifications;
@@ -50,7 +48,7 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     @AfterViews
     void bindAdapter() {
         setListAdapter(adapter);
-        downloadNotifications = new HashMap<DownloadItem, Notification.Builder>();
+        downloadNotifications = new HashMap<Download, Notification.Builder>();
     }
 
     @AfterViews
@@ -82,12 +80,12 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         }
     }
 
-    @AfterInject
-    void setupDownloadPrefs() {
-        DownloadItem.setConnectTimeout(prefs.connectTimeout().get());
-        DownloadItem.setReadTimeout(prefs.readTimeout().get());
-        DownloadItem.setDefaultContinue(prefs.continueDownload().get());
-    }
+    //@AfterInject
+    //void setupDownloadPrefs() {
+        //DownloadItem.setConnectTimeout(prefs.connectTimeout().get());
+        //DownloadItem.setReadTimeout(prefs.readTimeout().get());
+        //DownloadItem.setDefaultContinue(prefs.continueDownload().get());
+    //}
 
 
     @Override
@@ -134,12 +132,9 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     void downloadAdd(String url) {
         DownloadItem downloadItem = new DownloadItem();
         if (url != null) {
-            try {
-                downloadItem.setUrl(url)
-                    .setFileName()
-                    .setFileFolder();
-            } catch (MalformedURLException e) {
-            }
+            downloadItem.setUrl(url)
+                .setFileName()
+                .setFileFolder();
         }
 
         AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
@@ -147,22 +142,22 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
     }
 
-    HashMap<DownloadItem,Notification.Builder> downloadNotifications;
+    HashMap<Download,Notification.Builder> downloadNotifications;
 
-    @UiThread
-    public void downloadItemChanged(DownloadItem item) {
+    public void downloadChanged(Download proxy) {
         adapter.notifyDataSetChanged();
         getListView().requestFocusFromTouch();
 
-        DownloadItem.Status status = item.getStatus();
-        int progress = item.getProgressInt();
+        Downloader downloader = proxy.getDownloader();
+        Download.Status status = proxy.getStatus();
+        int progress = downloader.getProgressInt();
         String statusName = (
-                status == DownloadItem.Status.INITIAL? "… ":
-                status == DownloadItem.Status.STARTED? "▶ ":
-                status == DownloadItem.Status.PAUSED? "|| ":
-                status == DownloadItem.Status.FINISHED? "✓ ":
-                status == DownloadItem.Status.CANCELED? "■ ":
-                status == DownloadItem.Status.FAILED? "✗ ":
+                status == Download.Status.INITIAL? "… ":
+                status == Download.Status.STARTED? "▶ ":
+                status == Download.Status.PAUSED? "|| ":
+                status == Download.Status.FINISHED? "✓ ":
+                status == Download.Status.CANCELED? "■ ":
+                status == Download.Status.FAILED? "✗ ":
                 "? "
                 );
 
@@ -186,7 +181,7 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         }
 
         notify.setContentTitle(statusName + item.getFileName())
-              .setOngoing(status == DownloadItem.Status.STARTED)
+              .setOngoing(status == Download.Status.STARTED)
               //.addAction(
                       //status == DownloadItem.Status.STARTED? R.drawable.ic_action_pause:
                       //status == DownloadItem.Status.FINISHED? R.drawable.ic_action_replay:
@@ -205,8 +200,8 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
                           ))
               ;
 
-        if (status == DownloadItem.Status.STARTED || status == DownloadItem.Status.PAUSED || status == DownloadItem.Status.FAILED) {
-            notify.setProgress(100, progress, item.isUnkownSize() && status == DownloadItem.Status.STARTED);
+        if (status == Download.Status.STARTED || status == Download.Status.PAUSED || status == Download.Status.FAILED) {
+            notify.setProgress(100, progress, item.isUnkownSize() && status == Download.Status.STARTED);
         } else {
             notify.setProgress(0, 0, false);
         }
@@ -214,15 +209,14 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         notifications.notify(item.hashCode(), notify.build());
     }
 
-    @UiThread
-    public void downloadItemFailed(DownloadItem item, Throwable e) {
+    public void downloadFailed(Download proxy, Throwable e) {
         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     @ItemClick
-    public void listItemClicked(DownloadItem item) {
+    public void listItemClicked(Download proxy) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.fromFile(item.getFile()));
+        intent.setData(Uri.fromFile(proxy.getItem().getFile()));
         startActivity(intent);
     }
 }

@@ -1,4 +1,4 @@
-package me.kstep.aget.downloader;
+package me.kstep.downloader;
 
 import android.net.Uri;
 import java.io.File;

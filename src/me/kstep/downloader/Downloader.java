@@ -1,4 +1,4 @@
-package me.kstep.aget.downloader;
+package me.kstep.downloader;
 
 import android.net.Uri;
 import java.io.BufferedInputStream;
@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import me.kstep.annotations.Accessor;
 
 public abstract class Downloader {
     public static class FileMetaInfo {
@@ -15,41 +16,27 @@ public abstract class Downloader {
         public long totalSize = -1;
     }
 
+    @Getter @Setter private Uri uri;
+    @Getter @Setter private File file;
+
     final static private int bufferSize = 10*1024;
     final static protected int connectTimeout = 2000;
     final static protected int readTimeout = 5000;
 
-    protected long totalSize;
-    public long getTotalSize() {
-        return totalSize;
-    }
+    @Getter protected long totalSize;
     public boolean isUnknownSize() {
         return totalSize < 0;
     }
 
-    protected long downloadedSize;
-    public long getDownloadedSize() {
-        return downloadedSize;
-    }
+    @Getter protected long downloadedSize;
 
-    protected boolean resume;
-    public boolean getResume() {
-        return resume;
-    }
-    public Downloader setResume(boolean value) {
-        resume = value;
-        return this;
-    }
+    @Getter @Setter protected boolean resume;
 
     public static interface Listener {
         public void downloadChanged(Downloader downloader);
         public void downloadFailed(Downloader downloader, Throwable e);
     }
-    protected Listener listener;
-    public Downloader setListener(Listener l) {
-        listener = l;
-        return this;
-    }
+    @Setter protected Listener listener;
 
     Downloader() {
         totalSize = -1;
@@ -60,6 +47,29 @@ public abstract class Downloader {
         lastNotifiedDownloadedSize = 0;
     }
 
+    Downloader(Uri uri, File file) {
+        this();
+        this.uri = uri;
+        this.file = file;
+    }
+
+    Downloader(Uri uri) {
+        this();
+        this.uri = uri;
+    }
+
+    Downloader(File file) {
+        this();
+        this.file = file;
+    }
+
+    public FileMetaInfo init() {
+        FileMetaInfo meta = getMetaInfo(uri, file);
+        this.totalSize = meta.totalSize;
+        this.downloadedSize = resume && file.exists()? file.length(): 0;
+        this.lastSpeed = 0;
+        return meta;
+    }
 
     public int getProgressInt() {
         return totalSize > 0? (int) (downloadedSize * 100 / totalSize): -1;
@@ -73,14 +83,10 @@ public abstract class Downloader {
         return totalSize - downloadedSize;
     }
 
-    private long lastSpeed;
+    @Getter private long lastSpeed;
     private long lastNotifyTime = 0;
     private long lastNotifiedDownloadedSize = 0;
     final static private long notifyDelay = 2000;
-
-    public long getLastSpeed() {
-        return lastSpeed;
-    }
 
     public long getTimeLeft() {
         return lastSpeed > 0? (totalSize - downloadedSize) / lastSpeed: -1;
@@ -91,19 +97,10 @@ public abstract class Downloader {
      * initialize it according settings (timeouts and resume settings)
      */
     protected abstract InputStream openConnection(Uri uri, File file) throws IOException;
-    protected abstract void closeConnection();
-
-    final public void download(Downloadable item) {
-        download(item.getUri(), item.getFile());
-    }
-
+    protected abstract void closeConnection(InputStream is);
     public abstract FileMetaInfo getMetaInfo(Uri uri);
 
-    final public FileMetaInfo getMetaInfo(Downloadable item) {
-        return getMetaInfo(item.getUri());
-    }
-
-    final public void download(Uri uri, File file) {
+    final public void download() {
         downloadedSize = 0;
 
         if (listener != null) {
@@ -111,12 +108,13 @@ public abstract class Downloader {
         }
 
         // Reset connection service variables
+        InputStream is = null;
         BufferedInputStream in = null;
         BufferedOutputStream out = null;
 
         try {
             // Initialize streams...
-            in = new BufferedInputStream(openConnection(uri, file));
+            in = new BufferedInputStream(is = openConnection(uri, file));
             out = new BufferedOutputStream(new FileOutputStream(file, resume));
 
             // ...and buffers
@@ -155,7 +153,7 @@ public abstract class Downloader {
         } catch (InterruptedException e) {
 
         } finally {
-            closeConnection();
+            closeConnection(is);
             if (in != null) {
                 try {
                     in.close();

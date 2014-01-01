@@ -1,24 +1,23 @@
 package me.kstep.aget;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import com.googlecode.androidannotations.annotations.*;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.OptionalDataException;
 import java.util.LinkedList;
 import java.util.List;
-import java.io.OptionalDataException;
-import java.io.IOException;
-import me.kstep.aget.downloader.DownloadManager;
+import me.kstep.downloader.DownloadManager;
 
 @EBean
-class DownloadItemsAdapter extends BaseAdapter {
+class DownloadManagerAdapter extends BaseAdapter {
     @Bean
-    DownloadManager items;
+    DownloadManager manager;
 
     @RootContext
     Context context;
@@ -26,22 +25,29 @@ class DownloadItemsAdapter extends BaseAdapter {
     @RootContext
     MainActivity mainActivity;
 
+    List<Download> items;
+
+    @AfterInject
+    public void setupItems() {
+        items = manager.getJobs();
+    }
+
     @SuppressWarnings("unchecked")
     public void loadFromStream(ObjectInputStream is) {
-        try {
-            items = (List<DownloadItem>) is.readObject();
-            notifyDataSetChanged();
-        } catch (OptionalDataException e) {
-        } catch (ClassNotFoundException e) {
-        } catch (IOException e) {
-        }
+        //try {
+            //items = (List<DownloadItem>) is.readObject();
+            //notifyDataSetChanged();
+        //} catch (OptionalDataException e) {
+        //} catch (ClassNotFoundException e) {
+        //} catch (IOException e) {
+        //}
     }
 
     public void saveToStream(ObjectOutputStream os) {
-        try {
-            os.writeObject(items);
-        } catch (IOException e) {
-        }
+        //try {
+            //os.writeObject(items);
+        //} catch (IOException e) {
+        //}
     }
 
     @Override
@@ -52,13 +58,13 @@ class DownloadItemsAdapter extends BaseAdapter {
         return downloadView;
     }
 
-    public void removeItem(DownloadItem item) {
-        items.remove(item);
+    public void removeItem(Download item) {
+        manager.dequeue(item);
         notifyDataSetChanged();
     }
 
     public void removeItem(int pos) {
-        items.remove(pos);
+        manager.dequeue(pos);
         notifyDataSetChanged();
     }
 
@@ -77,21 +83,26 @@ class DownloadItemsAdapter extends BaseAdapter {
         return pos;
     }
 
-    public void addItem(DownloadItem item) {
-        if (!items.contains(item)) {
-            items.add(item);
-            notifyDataSetChanged();
-        }
+    public Download addItem(DownloadItem item) {
+        Download d = manager.enqueue(item);
+        notifyDataSetChanged();
+        return d;
     }
 
-    public void addItem(String url) {
+    public Download addItem(Download item) {
+        item = manager.enqueue(item);
+        notifyDataSetChanged();
+        return item;
+    }
+
+    public Download addItem(String url) {
         try {
-            addItem(new DownloadItem(url));
+            return addItem(new DownloadItem(url));
         } catch (NullPointerException e) {
         }
     }
 
-    public void addItem(URL url) {
-        addItem(new DownloadItem(url));
+    public Download addItem(Uri uri) {
+        return addItem(new DownloadItem(uri));
     }
 }
