@@ -128,6 +128,8 @@ class AddDownloadFragment extends DialogFragment {
     }
 
     void submit(Download download) {
+        download.setListener((Download.Listener) getActivity());
+
         DownloadItem item = (DownloadItem) download.getItem();
         item.setUri(downloadUrl.getText().toString());
         item.setFileName(downloadName.getText().toString());
