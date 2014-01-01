@@ -31,7 +31,7 @@ import me.kstep.downloader.Downloader;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
-public class MainActivity extends ListActivity implements Download.Listener {
+public class DownloadManagerActivity extends ListActivity implements Download.Listener {
 
     @Bean
     DownloadManagerAdapter adapter;
@@ -164,7 +164,7 @@ public class MainActivity extends ListActivity implements Download.Listener {
         Notification.Builder notify;
         PendingIntent pi = PendingIntent.getActivity(
                 this, 0,
-                new Intent(this, MainActivity.class)
+                new Intent(this, DownloadManagerActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT
                 );

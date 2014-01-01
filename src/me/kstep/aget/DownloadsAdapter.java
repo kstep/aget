@@ -21,7 +21,7 @@ class DownloadsAdapter extends BaseAdapter {
     Context context;
 
     @RootContext
-    MainActivity mainActivity;
+    DownloadManagerActivity mainActivity;
 
     List<Download> items;
 
