@@ -25,7 +25,7 @@ import me.kstep.downloader.Downloader;
 public class DownloadManagerActivity extends ListActivity implements Download.Listener {
 
     @Bean
-    DownloadManagerAdapter adapter;
+    DownloadsAdapter adapter;
 
     @SystemService
     NotificationManager notifications;
@@ -140,6 +140,8 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
         getListView().requestFocusFromTouch();
 
         Downloader downloader = proxy.getDownloader();
+        DownloadItem item = (DownloadItem) proxy.getItem();
+
         Download.Status status = proxy.getStatus();
         int progress = downloader.getProgressInt();
         String statusName = (
@@ -159,8 +161,8 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT
                 );
-        if (downloadNotifications.containsKey(item)) {
-            notify = downloadNotifications.get(item);
+        if (downloadNotifications.containsKey(proxy)) {
+            notify = downloadNotifications.get(proxy);
         } else {
             notify = new Notification.Builder(this)
               .setSmallIcon(R.drawable.ic_launcher)
@@ -168,7 +170,7 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
               //.addAction(R.drawable.ic_action_settings, "Open", pi)
               //.addAction(R.drawable.ic_action_cancel, "Cancel", pi)
               ;
-            downloadNotifications.put(item, notify);
+            downloadNotifications.put(proxy, notify);
         }
 
         notify.setContentTitle(statusName + item.getFileName())
@@ -181,18 +183,18 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
                       //status == DownloadItem.Status.FINISHED? "Restart":
                       //"Start", pi)
               .setContentInfo(String.format("%s | %d%%",
-                          Util.humanizeTime(item.getTimeLeft()),
+                          Util.humanizeTime(downloader.getTimeLeft()),
                           progress
                           ))
               .setContentText(String.format("%s/%s @ %s/s",
-                          Util.humanizeSize(item.getDownloadedSize()),
-                          Util.humanizeSize(item.getTotalSize()),
-                          Util.humanizeSize(item.getLastSpeed())
+                          Util.humanizeSize(downloader.getDownloadedSize()),
+                          Util.humanizeSize(downloader.getTotalSize()),
+                          Util.humanizeSize(downloader.getLastSpeed())
                           ))
               ;
 
         if (status == Download.Status.STARTED || status == Download.Status.PAUSED || status == Download.Status.FAILED) {
-            notify.setProgress(100, progress, item.isUnkownSize() && status == Download.Status.STARTED);
+            notify.setProgress(100, progress, downloader.isUnknownSize() && status == Download.Status.STARTED);
         } else {
             notify.setProgress(0, 0, false);
         }

@@ -17,6 +17,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import me.kstep.downloader.Download;
+import me.kstep.downloader.Downloader;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadFragment extends DialogFragment {
@@ -79,12 +80,12 @@ class AddDownloadFragment extends DialogFragment {
         DownloadItem item = (DownloadItem) download.getItem();
         Downloader downloader = download.getDownloader();
 
-        downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
+        downloadUrl.setText(item.getUri() == null? "": item.getUri().toString());
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
 
-        downloadContinue.setChecked(downloader.getResume());
-        downloadIgnoreCert.setChecked(downloader.getInsecure());
+        downloadContinue.setChecked(downloader.isResume());
+        downloadIgnoreCert.setChecked(downloader.isInsecure());
     }
 
     DownloadsAdapter getListAdapter() {
@@ -115,7 +116,7 @@ class AddDownloadFragment extends DialogFragment {
     @Background
     void fetchName() {
         DownloadItem item = (DownloadItem) download.getItem();
-        Downloader.FileMetaInfo meta = downloader.getMetaInfo(item.getUri(), item.getFile());
+        Downloader.FileMetaInfo meta = download.getDownloader().getMetaInfo(item.getUri(), item.getFile());
         item.setFileName(meta.fileName);
         item.setFileFolderByExtension();
         initBinding();

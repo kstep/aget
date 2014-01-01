@@ -1,6 +1,6 @@
 package me.kstep.downloader;
 
-class DownloadFactory {
+class DownloaderFactory {
     public Downloader newDownloader(Downloadable item) {
         Downloader downloader = null;
 
@@ -13,8 +13,8 @@ class DownloadFactory {
             throw new UnsupportedOperationException("Unsupported URI scheme " + scheme);
         }
 
-        downloader.setUri(item.getUri());
-        downloader.setFile(item.getFile());
+        //downloader.setUri(item.getUri());
+        //downloader.setFile(item.getFile());
         downloader.setResume(true);
         return downloader;
     }

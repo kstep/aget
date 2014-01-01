@@ -153,7 +153,7 @@ public class DownloadView extends RelativeLayout {
                 downloadStart.setVisibility(View.INVISIBLE);
                 downloadReload.setVisibility(View.INVISIBLE);
 
-                downloadProgress.setIndeterminate(item.isUnkownSize());
+                downloadProgress.setIndeterminate(downloader.isUnknownSize());
                 downloadProgress.setProgress(percent);
                 break;
         }

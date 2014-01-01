@@ -1,6 +1,14 @@
 package me.kstep.downloader;
 
-public class Download implements Runnable, Downloader.Listener {
+import android.os.Handler;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import lombok.Getter;
+import lombok.Setter;
+
+public class Download implements Downloader.Listener {
 
     public Download(Downloadable i) {
         item = i;
@@ -26,6 +34,9 @@ public class Download implements Runnable, Downloader.Listener {
     // }}}
 
     // Fields, setters and getters {{{
+    final private Handler handler = new Handler();
+
+    @Setter private Listener listener;
     @Getter private Downloadable item;
     @Getter private Status status;
     private Future<?> job;

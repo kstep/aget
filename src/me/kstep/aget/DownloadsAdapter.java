@@ -13,6 +13,7 @@ import java.io.OptionalDataException;
 import java.util.LinkedList;
 import java.util.List;
 import me.kstep.downloader.Download;
+import me.kstep.downloader.Downloadable;
 
 @EBean
 class DownloadsAdapter extends BaseAdapter {
@@ -24,6 +25,11 @@ class DownloadsAdapter extends BaseAdapter {
     DownloadManagerActivity mainActivity;
 
     List<Download> items;
+
+    @AfterInject
+    public void initItems() {
+        items = new LinkedList<Download>();
+    }
 
     @SuppressWarnings("unchecked")
     public void loadFromStream(ObjectInputStream is) {
@@ -69,7 +75,7 @@ class DownloadsAdapter extends BaseAdapter {
     }
 
     @Override
-    public DownloadItem getItem(int pos) {
+    public Download getItem(int pos) {
         return items.get(pos);
     }
 
@@ -94,7 +100,7 @@ class DownloadsAdapter extends BaseAdapter {
         }
     }
 
-    public Download addItem(Uri uri) {
-        return addItem(new DownloadItem(uri));
+    public void addItem(Uri uri) {
+        addItem(new DownloadItem(uri));
     }
 }
