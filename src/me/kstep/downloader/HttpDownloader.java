@@ -18,8 +18,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class HttpDownloader extends Downloader {
-    private boolean ignoreCertificate = true;
-
     private HttpURLConnection connection;
 
     @Override
@@ -71,7 +69,7 @@ public class HttpDownloader extends Downloader {
         conn.setConnectTimeout(connectTimeout);
         conn.setReadTimeout(readTimeout);
 
-        if (conn instanceof HttpsURLConnection && ignoreCertificate) {
+        if (conn instanceof HttpsURLConnection && insecure) {
             ((HttpsURLConnection) conn).setSSLSocketFactory(getTrustAllSocketFactory());
         }
 
@@ -129,7 +127,7 @@ public class HttpDownloader extends Downloader {
     }
 
     @Override
-    public FileMetaInfo getMetaInfo(Uri uri) {
+    public FileMetaInfo getMetaInfo(Uri uri, File file) {
         FileMetaInfo meta = new FileMetaInfo();
 
         try {

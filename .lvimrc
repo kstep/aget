@@ -4,12 +4,13 @@ let current_class_path = split($CLASSPATH, ":")
 let $CLASSPATH = join(current_class_path + filter([
             \ '/opt/android-sdk/platforms/android-19/android.jar',
             \ project_path . '/compile-libs/androidannotations-2.7.1.jar',
+            \ project_path . '/compile-libs/lombok.jar',
             \ project_path . '/src',
             \ project_path . '/gen',
             \ project_path . '/.ant_generated'
             \ ], 'index(current_class_path, v:val) == -1'),
             \ ':')
 
-let g:syntastic_java_javac_options = '-Xlint -AandroidManifestFile=' . project_path . '/AndroidManifest.xml'
+"let g:syntastic_java_javac_options = '-Xlint -AandroidManifestFile=' . project_path . '/AndroidManifest.xml -javaagent:lombok.jar=ECJ'
 
-set makeprg=make\ all
+"set makeprg=make\ all

@@ -12,12 +12,10 @@ import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.util.LinkedList;
 import java.util.List;
-import me.kstep.downloader.DownloadManager;
+import me.kstep.downloader.Download;
 
 @EBean
-class DownloadManagerAdapter extends BaseAdapter {
-    @Bean
-    DownloadManager manager;
+class DownloadsAdapter extends BaseAdapter {
 
     @RootContext
     Context context;
@@ -26,11 +24,6 @@ class DownloadManagerAdapter extends BaseAdapter {
     MainActivity mainActivity;
 
     List<Download> items;
-
-    @AfterInject
-    public void setupItems() {
-        items = manager.getJobs();
-    }
 
     @SuppressWarnings("unchecked")
     public void loadFromStream(ObjectInputStream is) {
@@ -52,19 +45,21 @@ class DownloadManagerAdapter extends BaseAdapter {
 
     @Override
     public View getView(int pos, View view, ViewGroup parent) {
-        DownloadItemView downloadView = view == null? DownloadItemView_.build(context): (DownloadItemView) view;
-        final DownloadItem item = getItem(pos);
+        DownloadView downloadView = view == null? DownloadView_.build(context): (DownloadView) view;
+        final Download item = getItem(pos);
         downloadView.bind(item);
         return downloadView;
     }
 
     public void removeItem(Download item) {
-        manager.dequeue(item);
+        //try { item.stop(); } catch (IllegalStateException e) {}
+        items.remove(item);
         notifyDataSetChanged();
     }
 
     public void removeItem(int pos) {
-        manager.dequeue(pos);
+        //try { getItem(pos).stop(); } catch (IllegalStateException e) {}
+        items.remove(pos);
         notifyDataSetChanged();
     }
 
@@ -83,21 +78,18 @@ class DownloadManagerAdapter extends BaseAdapter {
         return pos;
     }
 
-    public Download addItem(DownloadItem item) {
-        Download d = manager.enqueue(item);
+    public void addItem(Download item) {
+        items.add(item);
         notifyDataSetChanged();
-        return d;
     }
 
-    public Download addItem(Download item) {
-        item = manager.enqueue(item);
-        notifyDataSetChanged();
-        return item;
+    public void addItem(Downloadable item) {
+        items.add(new Download(item));
     }
 
-    public Download addItem(String url) {
+    public void addItem(String url) {
         try {
-            return addItem(new DownloadItem(url));
+            addItem(new DownloadItem(url));
         } catch (NullPointerException e) {
         }
     }

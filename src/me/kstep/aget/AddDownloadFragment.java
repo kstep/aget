@@ -16,10 +16,10 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
-import java.net.MalformedURLException;
+import me.kstep.downloader.Download;
 
 @EFragment(R.layout.add_download_item)
-class AddDownloadItemFragment extends DialogFragment {
+class AddDownloadFragment extends DialogFragment {
 
     @ViewById
     Spinner downloadFolder;
@@ -74,16 +74,21 @@ class AddDownloadItemFragment extends DialogFragment {
     void initBinding() {
         getDialog().setTitle("Add new download");
 
-        if (item == null) return;
-        downloadName.setText(item.getFileName() == null? "": item.getFileName());
+        if (download == null) return;
+
+        DownloadItem item = (DownloadItem) download.getItem();
+        Downloader downloader = download.getDownloader();
+
         downloadUrl.setText(item.getUrl() == null? "": item.getUrl().toString());
-        downloadContinue.setChecked(item.isContinue());
-        downloadIgnoreCert.setChecked(item.isIgnoreCertificate());
+        downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
+
+        downloadContinue.setChecked(downloader.getResume());
+        downloadIgnoreCert.setChecked(downloader.getInsecure());
     }
 
-    DownloadManagerAdapter getListAdapter() {
-        return (DownloadManagerAdapter) ((ListActivity) getActivity()).getListAdapter();
+    DownloadsAdapter getListAdapter() {
+        return (DownloadsAdapter) ((ListActivity) getActivity()).getListAdapter();
     }
 
     @Click
@@ -94,39 +99,46 @@ class AddDownloadItemFragment extends DialogFragment {
     @Click
     void downloadEnqueueBtn() {
         submit();
-        getListAdapter().addItem(item);
+        getListAdapter().addItem(download);
         dismiss();
     }
 
     @Click
     void downloadStartBtn() {
         submit();
-        getListAdapter().addItem(item).start();
+        getListAdapter().addItem(download);
+        download.start();
         dismiss();
     }
 
     @Click
     @Background
     void fetchName() {
-        //item.fetchMetaData();
-        //initBinding();
+        DownloadItem item = (DownloadItem) download.getItem();
+        Downloader.FileMetaInfo meta = downloader.getMetaInfo(item.getUri(), item.getFile());
+        item.setFileName(meta.fileName);
+        item.setFileFolderByExtension();
+        initBinding();
     }
 
-    DownloadItem item = null;
+    Download download = null;
     void bind(DownloadItem item) {
-        this.item = item;
+        download = new Download(item);
     }
 
-    void submit(DownloadItem item) {
+    void submit(Download download) {
+        DownloadItem item = (DownloadItem) download.getItem();
         item.setUri(downloadUrl.getText().toString());
         item.setFileName(downloadName.getText().toString());
-        //item.setContinue(downloadContinue.isChecked());
-        //item.setIgnoreCertificate(item.isIgnoreCertificate());
         item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
+
+        Downloader downloader = download.getDownloader();
+        downloader.setInsecure(downloadIgnoreCert.isChecked());
+        downloader.setResume(downloadContinue.isChecked());
     }
 
     void submit() {
-        submit(item);
+        submit(download);
     }
 
     String getFolderHandle(int id) {

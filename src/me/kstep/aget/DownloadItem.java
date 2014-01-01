@@ -2,15 +2,18 @@ package me.kstep.aget;
 
 import android.net.Uri;
 import android.os.Environment;
+import android.webkit.MimeTypeMap;
 import java.io.File;
 import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 import me.kstep.downloader.Downloadable;
 
 class DownloadItem implements Serializable, Downloadable {
     private static final long serialVersionUID = 0L;
 
     // main meta-data
-    @Getter @Setter private Uri uri = null;
+    @Getter private Uri uri = null;
     @Getter @Setter private String fileName = null;
     @Getter @Setter private String fileFolder = Environment.DIRECTORY_DOWNLOADS;
 
@@ -39,13 +42,40 @@ class DownloadItem implements Serializable, Downloadable {
         return new File(Environment.getExternalStoragePublicDirectory(getFileFolder()), getFileName());
     }
 
+    public String getMimeTypeByExtension() {
+        String mimeType = MimeTypeMap
+                .getSingleton()
+                .getMimeTypeFromExtension(
+                    MimeTypeMap.getFileExtensionFromUrl(fileName));
+        return mimeType == null? "application/octet-stream": mimeType;
+    }
+
     public void setUri(String uri) {
         setUri(Uri.parse(uri));
     }
 
-    public void setFileName() {
+    public void setUri(Uri uri) {
+        this.uri = uri;
+    }
+
+    public void setFileNameFromUri() {
         String name = uri.getLastPathSegment();
         setFileName(name == null || "".equals(name)? "index.html": name);
+    }
+
+    public void setFileFolderByExtension() {
+        setFileFolderByMimeType(getMimeTypeByExtension());
+    }
+
+    public void setFileFolderByMimeType(String mimeType) {
+        if (mimeType == null) {
+            mimeType = getMimeTypeByExtension();
+        }
+
+        setFileFolder(mimeType.startsWith("video/")? Environment.DIRECTORY_MOVIES:
+                      mimeType.startsWith("audio/")? Environment.DIRECTORY_MUSIC:
+                      mimeType.startsWith("image/")? Environment.DIRECTORY_PICTURES:
+                      Environment.DIRECTORY_DOWNLOADS);
     }
 
     @Override

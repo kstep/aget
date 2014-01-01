@@ -7,9 +7,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import me.kstep.annotations.Accessor;
+import lombok.Getter;
+import lombok.Setter;
 
-public abstract class Downloader {
+public abstract class Downloader implements Runnable {
     public static class FileMetaInfo {
         public String mimeType = null;
         public String fileName = null;
@@ -31,10 +32,15 @@ public abstract class Downloader {
     @Getter protected long downloadedSize;
 
     @Getter @Setter protected boolean resume;
+    @Getter @Setter protected boolean insecure;
 
     public static interface Listener {
-        public void downloadChanged(Downloader downloader);
-        public void downloadFailed(Downloader downloader, Throwable e);
+        public void downloadStarted(Downloader downloader); // started download
+        public void downloadProgress(Downloader downloader); // progress changed
+        public void downloadFinished(Downloader downloader); // successfully finished
+        public void downloadStopped(Downloader downloader); // force stopped
+        public void downloadFailed(Downloader downloader, Throwable e); // failed download
+        public void downloadEnded(Downloader downloader); // ended download
     }
     @Setter protected Listener listener;
 
@@ -98,13 +104,13 @@ public abstract class Downloader {
      */
     protected abstract InputStream openConnection(Uri uri, File file) throws IOException;
     protected abstract void closeConnection(InputStream is);
-    public abstract FileMetaInfo getMetaInfo(Uri uri);
+    public abstract FileMetaInfo getMetaInfo(Uri uri, File file);
 
-    final public void download() {
+    final public void run() {
         downloadedSize = 0;
 
         if (listener != null) {
-            listener.downloadChanged(this);
+            listener.downloadStarted(this);
         }
 
         // Reset connection service variables
@@ -134,7 +140,7 @@ public abstract class Downloader {
                         lastNotifiedDownloadedSize = downloadedSize;
 
                         if (listener != null) {
-                            listener.downloadChanged(this);
+                            listener.downloadProgress(this);
                         }
                     }
 
@@ -144,6 +150,10 @@ public abstract class Downloader {
                 }
             }
 
+            if (listener != null) {
+                listener.downloadFinished(this);
+            }
+
         } catch (IOException e) {
             android.util.Log.e("Downloader", "Download error", e);
             if (listener != null) {
@@ -151,6 +161,9 @@ public abstract class Downloader {
             }
 
         } catch (InterruptedException e) {
+            if (listener != null) {
+                listener.downloadStopped(this);
+            }
 
         } finally {
             closeConnection(is);
@@ -167,7 +180,7 @@ public abstract class Downloader {
         }
 
         if (listener != null) {
-            listener.downloadChanged(this);
+            listener.downloadEnded(this);
         }
     }
 }

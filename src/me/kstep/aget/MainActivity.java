@@ -72,7 +72,7 @@ public class MainActivity extends ListActivity implements Download.Listener {
     @AfterViews
     void loadDownloadsList() {
         try {
-            ObjectInputStream io = new ObjectInputStream(openFileInput("downloadItems.bin"));
+            ObjectInputStream io = new ObjectInputStream(openFileInput("downloads.bin"));
             adapter.loadFromStream(io);
 
         } catch (FileNotFoundException e) {
@@ -91,7 +91,7 @@ public class MainActivity extends ListActivity implements Download.Listener {
     @Override
     protected void onPause() {
         try {
-            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloadItems.bin", MODE_PRIVATE));
+            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
             adapter.saveToStream(io);
 
         } catch (FileNotFoundException e) {
@@ -129,17 +129,17 @@ public class MainActivity extends ListActivity implements Download.Listener {
         onBackPressed();
     }
 
-    void downloadAdd(String url) {
+    void downloadAdd(String uri) {
         DownloadItem downloadItem = new DownloadItem();
-        if (url != null) {
-            downloadItem.setUrl(url)
-                .setFileName()
-                .setFileFolder();
+        if (uri != null) {
+            downloadItem.setUri(uri);
+            downloadItem.setFileNameFromUri();
+            downloadItem.setFileFolderByExtension();
         }
 
-        AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
+        AddDownloadFragment addDownloadDialog = new AddDownloadFragment_();
         addDownloadDialog.bind(downloadItem);
-        addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
+        addDownloadDialog.show(getFragmentManager(), "addDownload");
     }
 
     HashMap<Download,Notification.Builder> downloadNotifications;

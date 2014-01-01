@@ -1,5 +1,7 @@
 package me.kstep.aget;
 
+import java.io.File;
+
 class Util {
     public static String humanizeSize(String format, long value) {
         String[] suffixes = {"b", "K", "M", "G", "T"};

@@ -12,9 +12,11 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.googlecode.androidannotations.annotations.*;
+import me.kstep.downloader.Downloader;
+import me.kstep.downloader.Download;
 
 @EViewGroup(R.layout.download_item)
-public class DownloadItemView extends RelativeLayout {
+public class DownloadView extends RelativeLayout {
     @ViewById
     TextView downloadFilename;
 
@@ -39,15 +41,15 @@ public class DownloadItemView extends RelativeLayout {
     @ViewById
     Button downloadCancel;
 
-    public DownloadItemView(Context context, AttributeSet attrs, int defStyle) {
+    public DownloadView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
 
-    public DownloadItemView(Context context, AttributeSet attrs) {
+    public DownloadView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public DownloadItemView(Context context) {
+    public DownloadView(Context context) {
         super(context);
     }
 
@@ -55,23 +57,23 @@ public class DownloadItemView extends RelativeLayout {
         return (ListView) getParent();
     }
 
-    DownloadItem getListItem() {
-        return (DownloadItem) ((ListActivity) getContext()).getListAdapter().getItem(getListView().getPositionForView(this));
+    Download getListItem() {
+        return (Download) ((ListActivity) getContext()).getListAdapter().getItem(getListView().getPositionForView(this));
     }
 
-    DownloadItemsAdapter getListAdapter() {
-        return (DownloadItemsAdapter) ((ListActivity) getContext()).getListAdapter();
+    DownloadsAdapter getListAdapter() {
+        return (DownloadsAdapter) ((ListActivity) getContext()).getListAdapter();
     }
 
     @Click
     void downloadStart(View view) {
-        getListItem().startDownload((DownloadItem.Listener) getContext());
+        getListItem().start();
     }
 
     @Click
     void downloadCancel(View view) {
-        final DownloadItem item = getListItem();
-        final DownloadItemsAdapter adapter = getListAdapter();
+        final Download item = getListItem();
+        final DownloadsAdapter adapter = getListAdapter();
 
         new AlertDialog.Builder(getContext())
             .setTitle("Remove download item?")
@@ -85,7 +87,7 @@ public class DownloadItemView extends RelativeLayout {
             .setNeutralButton("Remove", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    item.cancelDownload();
+                    try { item.stop(); } catch (IllegalStateException e) {}
                     adapter.removeItem(item);
                     requestFocusFromTouch();
                 }
@@ -93,7 +95,7 @@ public class DownloadItemView extends RelativeLayout {
             .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    item.cancelDownload(true);
+                    try { item.cancel(); } catch (IllegalStateException e) {}
                     adapter.removeItem(item);
                     requestFocusFromTouch();
                 }
@@ -103,20 +105,24 @@ public class DownloadItemView extends RelativeLayout {
 
     @Click
     void downloadPause(View view) {
-        DownloadItem item = getListItem();
-        item.pauseDownload();
+        Download item = getListItem();
+        item.pause();
         bind(item);
         requestFocusFromTouch();
     }
 
     @SuppressWarnings("fallthrough")
-    public void bind(final DownloadItem item) {
-        long totalSize = item.getTotalSize();
-        long downloadedSize = item.getDownloadedSize();
-        long lastSpeed = item.getLastSpeed();
-        int percent = item.getProgressInt();
-        long timeLeft = item.getTimeLeft();
-        DownloadItem.Status status = item.getStatus();
+    public void bind(final Download download) {
+        Downloader downloader = download.getDownloader();
+        DownloadItem item = (DownloadItem) download.getItem();
+
+        long totalSize = downloader.getTotalSize();
+        long downloadedSize = downloader.getDownloadedSize();
+        long lastSpeed = downloader.getLastSpeed();
+        int percent = downloader.getProgressInt();
+        long timeLeft = downloader.getTimeLeft();
+
+        Download.Status status = download.getStatus();
 
         downloadFilename.setText(item.getFileName());
         downloadSize.setText(String.format("%s/%s @ %s/s", Util.humanizeSize(downloadedSize), Util.humanizeSize(totalSize), Util.humanizeSize(lastSpeed)));
