@@ -11,6 +11,6 @@ let $CLASSPATH = join(current_class_path + filter([
             \ ], 'index(current_class_path, v:val) == -1'),
             \ ':')
 
-"let g:syntastic_java_javac_options = '-Xlint -AandroidManifestFile=' . project_path . '/AndroidManifest.xml -javaagent:lombok.jar=ECJ'
+let g:syntastic_java_javac_options = '-Xlint -AandroidManifestFile=' . project_path . '/AndroidManifest.xml -javaagent:lombok.jar=ECJ'
 
 "set makeprg=make\ all
