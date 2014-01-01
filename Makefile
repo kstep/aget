@@ -1,14 +1,14 @@
 all: install start
 
-bin/MainActivity-debug.apk: src/me/kstep/aget/*.java
+bin/aGet-debug.apk: src/me/kstep/aget/*.java
 
-compile: bin/MainActivity-debug.apk
+compile: bin/aGet-debug.apk
 	ant debug
 
 install: compile
 	ant installd
 
 start:
-	adb shell am start -n me.kstep.aget/.MainActivity_
+	adb shell am start -n me.kstep.aget/.DownloadManagerActivity_
 
 .PHONY: compile install all start

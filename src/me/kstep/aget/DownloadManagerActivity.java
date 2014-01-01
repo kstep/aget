@@ -1,38 +1,31 @@
 package me.kstep.aget;
 
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ListView;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import com.googlecode.androidannotations.annotations.sharedpreferences.Pref;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
-import android.app.PendingIntent;
 import java.util.HashMap;
+import me.kstep.downloader.Download;
+import me.kstep.downloader.Downloader;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
-public class MainActivity extends ListActivity implements DownloadItem.Listener {
+public class DownloadManagerActivity extends ListActivity implements Download.Listener {
 
     @Bean
-    DownloadItemsAdapter adapter;
+    DownloadsAdapter adapter;
 
     @SystemService
     NotificationManager notifications;
@@ -46,7 +39,7 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     @AfterViews
     void bindAdapter() {
         setListAdapter(adapter);
-        downloadNotifications = new HashMap<DownloadItem, Notification.Builder>();
+        downloadNotifications = new HashMap<Download, Notification.Builder>();
     }
 
     @AfterViews
@@ -70,7 +63,7 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
     @AfterViews
     void loadDownloadsList() {
         try {
-            ObjectInputStream io = new ObjectInputStream(openFileInput("downloadItems.bin"));
+            ObjectInputStream io = new ObjectInputStream(openFileInput("downloads.bin"));
             adapter.loadFromStream(io);
 
         } catch (FileNotFoundException e) {
@@ -78,18 +71,18 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         }
     }
 
-    @AfterInject
-    void setupDownloadPrefs() {
-        DownloadItem.setConnectTimeout(prefs.connectTimeout().get());
-        DownloadItem.setReadTimeout(prefs.readTimeout().get());
-        DownloadItem.setDefaultContinue(prefs.continueDownload().get());
-    }
+    //@AfterInject
+    //void setupDownloadPrefs() {
+        //DownloadItem.setConnectTimeout(prefs.connectTimeout().get());
+        //DownloadItem.setReadTimeout(prefs.readTimeout().get());
+        //DownloadItem.setDefaultContinue(prefs.continueDownload().get());
+    //}
 
 
     @Override
     protected void onPause() {
         try {
-            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloadItems.bin", MODE_PRIVATE));
+            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
             adapter.saveToStream(io);
 
         } catch (FileNotFoundException e) {
@@ -127,50 +120,49 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         onBackPressed();
     }
 
-    void downloadAdd(String url) {
+    void downloadAdd(String uri) {
         DownloadItem downloadItem = new DownloadItem();
-        if (url != null) {
-            try {
-                downloadItem.setUrl(url)
-                    .setFileName()
-                    .setFileFolder();
-            } catch (MalformedURLException e) {
-            }
+        if (uri != null) {
+            downloadItem.setUri(uri);
+            downloadItem.setFileNameFromUri();
+            downloadItem.setFileFolderByExtension();
         }
 
-        AddDownloadItemFragment addDownloadDialog = new AddDownloadItemFragment_();
+        AddDownloadFragment addDownloadDialog = new AddDownloadFragment_();
         addDownloadDialog.bind(downloadItem);
-        addDownloadDialog.show(getFragmentManager(), "addDownloadItem");
+        addDownloadDialog.show(getFragmentManager(), "addDownload");
     }
 
-    HashMap<DownloadItem,Notification.Builder> downloadNotifications;
+    HashMap<Download,Notification.Builder> downloadNotifications;
 
-    @UiThread
-    public void downloadItemChanged(DownloadItem item) {
+    public void downloadChanged(Download proxy) {
         adapter.notifyDataSetChanged();
         getListView().requestFocusFromTouch();
 
-        DownloadItem.Status status = item.getStatus();
-        int progress = item.getProgressInt();
+        Downloader downloader = proxy.getDownloader();
+        DownloadItem item = (DownloadItem) proxy.getItem();
+
+        Download.Status status = proxy.getStatus();
+        int progress = downloader.getProgressInt();
         String statusName = (
-                status == DownloadItem.Status.INITIAL? "… ":
-                status == DownloadItem.Status.STARTED? "▶ ":
-                status == DownloadItem.Status.PAUSED? "|| ":
-                status == DownloadItem.Status.FINISHED? "✓ ":
-                status == DownloadItem.Status.CANCELED? "■ ":
-                status == DownloadItem.Status.FAILED? "✗ ":
+                status == Download.Status.INITIAL? "… ":
+                status == Download.Status.STARTED? "▶ ":
+                status == Download.Status.PAUSED? "|| ":
+                status == Download.Status.FINISHED? "✓ ":
+                status == Download.Status.CANCELED? "■ ":
+                status == Download.Status.FAILED? "✗ ":
                 "? "
                 );
 
         Notification.Builder notify;
         PendingIntent pi = PendingIntent.getActivity(
                 this, 0,
-                new Intent(this, MainActivity.class)
+                new Intent(this, DownloadManagerActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_UPDATE_CURRENT
                 );
-        if (downloadNotifications.containsKey(item)) {
-            notify = downloadNotifications.get(item);
+        if (downloadNotifications.containsKey(proxy)) {
+            notify = downloadNotifications.get(proxy);
         } else {
             notify = new Notification.Builder(this)
               .setSmallIcon(R.drawable.ic_launcher)
@@ -178,11 +170,11 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
               //.addAction(R.drawable.ic_action_settings, "Open", pi)
               //.addAction(R.drawable.ic_action_cancel, "Cancel", pi)
               ;
-            downloadNotifications.put(item, notify);
+            downloadNotifications.put(proxy, notify);
         }
 
         notify.setContentTitle(statusName + item.getFileName())
-              .setOngoing(status == DownloadItem.Status.STARTED)
+              .setOngoing(status == Download.Status.STARTED)
               //.addAction(
                       //status == DownloadItem.Status.STARTED? R.drawable.ic_action_pause:
                       //status == DownloadItem.Status.FINISHED? R.drawable.ic_action_replay:
@@ -191,18 +183,18 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
                       //status == DownloadItem.Status.FINISHED? "Restart":
                       //"Start", pi)
               .setContentInfo(String.format("%s | %d%%",
-                          Util.humanizeTime(item.getTimeLeft()),
+                          Util.humanizeTime(downloader.getTimeLeft()),
                           progress
                           ))
               .setContentText(String.format("%s/%s @ %s/s",
-                          Util.humanizeSize(item.getDownloadedSize()),
-                          Util.humanizeSize(item.getTotalSize()),
-                          Util.humanizeSize(item.getLastSpeed())
+                          Util.humanizeSize(downloader.getDownloadedSize()),
+                          Util.humanizeSize(downloader.getTotalSize()),
+                          Util.humanizeSize(downloader.getLastSpeed())
                           ))
               ;
 
-        if (status == DownloadItem.Status.STARTED || status == DownloadItem.Status.PAUSED || status == DownloadItem.Status.FAILED) {
-            notify.setProgress(100, progress, item.isUnkownSize() && status == DownloadItem.Status.STARTED);
+        if (status == Download.Status.STARTED || status == Download.Status.PAUSED || status == Download.Status.FAILED) {
+            notify.setProgress(100, progress, downloader.isUnknownSize() && status == Download.Status.STARTED);
         } else {
             notify.setProgress(0, 0, false);
         }
@@ -210,15 +202,14 @@ public class MainActivity extends ListActivity implements DownloadItem.Listener 
         notifications.notify(item.hashCode(), notify.build());
     }
 
-    @UiThread
-    public void downloadItemFailed(DownloadItem item, Throwable e) {
+    public void downloadFailed(Download proxy, Throwable e) {
         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     @ItemClick
-    public void listItemClicked(DownloadItem item) {
+    public void listItemClicked(Download proxy) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.fromFile(item.getFile()));
+        intent.setData(Uri.fromFile(proxy.getItem().getFile()));
         startActivity(intent);
     }
 }
