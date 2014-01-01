@@ -1,7 +1,5 @@
 package me.kstep.aget;
 
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -11,20 +9,13 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ListView;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import com.googlecode.androidannotations.annotations.sharedpreferences.Pref;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
 import java.util.HashMap;
 import me.kstep.downloader.Download;
 import me.kstep.downloader.Downloader;
