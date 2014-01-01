@@ -12,7 +12,9 @@ import java.io.InputStream;
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class Downloader implements Runnable {
+public abstract class Downloader implements Runnable, Serializable {
+    private static final long serialVersionUID = 0L;
+
     public static class FileMetaInfo {
         public String mimeType = null;
         public String fileName = null;

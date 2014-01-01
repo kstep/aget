@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Download implements Downloader.Listener {
+public class Download implements Downloader.Listener, Serializable {
+    private static final long serialVersionUID = 0L;
 
     public Download(Downloadable i) {
         item = i;
