@@ -9,6 +9,7 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import com.googlecode.androidannotations.annotations.sharedpreferences.Pref;
@@ -22,7 +23,8 @@ import me.kstep.downloader.Downloader;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
-public class DownloadManagerActivity extends ListActivity implements Download.Listener {
+public class DownloadManagerActivity extends ListActivity
+    implements Download.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Bean
     DownloadsAdapter adapter;
@@ -78,13 +80,24 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
         }
     }
 
-    //@AfterInject
-    //void setupDownloadPrefs() {
-        //DownloadItem.setConnectTimeout(prefs.connectTimeout().get());
-        //DownloadItem.setReadTimeout(prefs.readTimeout().get());
-        //DownloadItem.setDefaultContinue(prefs.continueDownload().get());
-    //}
+    @AfterInject
+    void setupDownloadPrefs() {
+        Downloader.setConnectTimeout(prefs.connectTimeout().get());
+        Downloader.setReadTimeout(prefs.readTimeout().get());
+        Downloader.setBufferSize(prefs.bufferSize().get());
+        Downloader.setDefaultResume(prefs.continueDownload().get());
+        Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
+    }
 
+    @AfterInject
+    void registerPrefsListener() {
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
+        setupDownloadPrefs();
+    }
 
     @Override
     protected void onPause() {

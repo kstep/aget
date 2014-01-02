@@ -36,6 +36,11 @@
         android:defaultValue="true"
         />
     <CheckBoxPreference
+        android:title="Ignore SSL certs by default"
+        android:key="ignoreCertificates"
+        android:defaultValue="true"
+        />
+    <CheckBoxPreference
         android:title="Download via Wi-Fi only"
         android:key="useWiFiOnly"
         android:defaultValue="true"

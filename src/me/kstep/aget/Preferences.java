@@ -17,6 +17,9 @@ public interface Preferences {
     boolean continueDownload();
 
     @DefaultBoolean(true)
+    boolean ignoreCertificates();
+
+    @DefaultBoolean(true)
     boolean useWiFiOnly();
 }
 

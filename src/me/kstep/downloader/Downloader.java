@@ -20,9 +20,11 @@ public abstract class Downloader implements Runnable {
     @Getter @Setter private Uri uri;
     @Getter @Setter private File file;
 
-    final static private int bufferSize = 10*1024;
-    final static protected int connectTimeout = 2000;
-    final static protected int readTimeout = 5000;
+    @Setter static private int bufferSize = 10*1024;
+    @Setter static protected int connectTimeout = 2000;
+    @Setter static protected int readTimeout = 5000;
+    @Setter static private boolean defaultResume = true;
+    @Setter static private boolean defaultInsecure = true;
 
     @Getter protected long totalSize;
     public boolean isUnknownSize() {
@@ -51,6 +53,9 @@ public abstract class Downloader implements Runnable {
 
         lastNotifyTime = 0;
         lastNotifiedDownloadedSize = 0;
+
+        resume = defaultResume;
+        insecure = defaultInsecure;
     }
 
     Downloader(Uri uri, File file) {
