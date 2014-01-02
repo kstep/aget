@@ -4,24 +4,40 @@
     xmlns:aget="http://schemas.android.com/apk/res/me.kstep.aget"
     >
 
-    <Preference
+    <me.kstep.widgets.IntegerPreference
         android:title="Connection timeout"
         android:key="connectTimeout"
         android:defaultValue="2000"
+        aget:minValue="1000"
+        aget:maxValue="10000"
+        aget:stepValue="500"
+        aget:unitName="ms"
         />
-    <Preference
+    <me.kstep.widgets.IntegerPreference
         android:title="Read timeout"
         android:key="readTimeout"
         android:defaultValue="5000"
+        aget:minValue="1000"
+        aget:maxValue="10000"
+        aget:stepValue="500"
+        aget:unitName="ms"
         />
-    <Preference
+    <me.kstep.widgets.IntegerPreference
         android:title="Buffer size"
         android:key="bufferSize"
-        android:defaultValue="10240"
+        android:defaultValue="10"
+        aget:minValue="1"
+        aget:maxValue="100"
+        aget:unitName="Kb"
         />
     <CheckBoxPreference
         android:title="Continue downloads by default"
         android:key="continueDownload"
+        android:defaultValue="true"
+        />
+    <CheckBoxPreference
+        android:title="Download via Wi-Fi only"
+        android:key="useWiFiOnly"
         android:defaultValue="true"
         />
 

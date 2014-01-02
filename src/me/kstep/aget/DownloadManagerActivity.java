@@ -30,11 +30,18 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
     @SystemService
     NotificationManager notifications;
 
+    ClipboardManager clipboard;
+
     @Pref
     Preferences_ prefs;
 
     @Extra(Intent.EXTRA_TEXT)
     String sharedText;
+
+    @AfterInject
+    void injectClipboardManager() {
+        clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+    }
 
     @AfterViews
     void bindAdapter() {
@@ -94,19 +101,18 @@ public class DownloadManagerActivity extends ListActivity implements Download.Li
 
     @OptionsItem
     void downloadAdd() {
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
         ClipData clip = clipboard.getPrimaryClip();
         String uri = clip == null? null: clip.getItemAt(0).coerceToText(this).toString();
         downloadAdd(uri);
     }
 
-    //@OptionsItem
-    //void downloadPrefs() {
-        //getFragmentManager().beginTransaction()
-            //.add(android.R.id.content, new PreferencesFragment_())
-            //.addToBackStack(null)
-            //.commit();
-    //}
+    @OptionsItem
+    void downloadPrefs() {
+        getFragmentManager().beginTransaction()
+            .add(android.R.id.content, new PreferencesFragment_())
+            .addToBackStack(null)
+            .commit();
+    }
 
     @Override
     public void onBackPressed() {

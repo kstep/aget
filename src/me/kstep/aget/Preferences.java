@@ -15,5 +15,8 @@ public interface Preferences {
 
     @DefaultBoolean(true)
     boolean continueDownload();
+
+    @DefaultBoolean(true)
+    boolean useWiFiOnly();
 }
 
