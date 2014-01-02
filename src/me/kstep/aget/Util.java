@@ -5,9 +5,8 @@ import java.io.File;
 class Util {
     public static String humanizeSize(String format, long value) {
         String[] suffixes = {"b", "K", "M", "G", "T"};
-        String suffix;
         int index = 0;
-        float fvalue = (float) value;
+        float fvalue = value;
 
         while (fvalue > 1024 && index < suffixes.length) {
             fvalue /= 1024;

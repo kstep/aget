@@ -10,6 +10,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.HttpEntity;
+import org.apache.http.ParseException;
 
 public class ApacheHttpDownloader extends Downloader {
 
@@ -41,7 +43,7 @@ public class ApacheHttpDownloader extends Downloader {
             totalSize += downloadedSize;
         }
 
-        return response.getContent();
+        return entity.getContent();
     }
 
     @Override
@@ -51,32 +53,43 @@ public class ApacheHttpDownloader extends Downloader {
     @Override
     public FileMetaInfo getMetaInfo(Uri uri, File file) {
         FileMetaInfo meta = new FileMetaInfo();
-        HttpClient client = new DefaultHttpClient();
-        HttpHead request = new HttpHead(uri.toString());
-        HttpResponse response = client.execute(request);
-
-        int code = response.getStatusLine().getStatusCode();
-        if (code != 200) {
-            throw new IOException(String.format("Invalid return code %d, expected 200", code));
-        }
 
         try {
-            meta.mimeType = response.getFirstHeader("Content-Type").getElements()[0].getValue();
-        } catch (NullPointerException e) {
-        }
+            HttpClient client = new DefaultHttpClient();
+            HttpHead request = new HttpHead(uri.toString());
+            HttpResponse response = client.execute(request);
 
-        try {
-            meta.totalSize = Long.parseLong(response.getFirstHeader("Content-Length").getValue(), 10);
-        } catch (NullPointerException e) {
-        }
+            int code = response.getStatusLine().getStatusCode();
+            if (code == 200) {
 
-        try {
-            meta.fileName = response.getFirstHeader("Content-Disposition").getElements()[0].getParameterByName("filename").getValue();
-        } catch (NullPointerException e) {
-            try {
-                meta.fileName = response.getFirstHeader("Content-Type").getElements()[0].getParameterByName("name").getValue();
-            } catch (NullPointerException e) {
+                try {
+                    meta.mimeType = response.getFirstHeader("Content-Type").getElements()[0].getValue();
+                } catch (NullPointerException e) {
+                } catch (ParseException e) {
+                    meta.mimeType = response.getFirstHeader("Content-Type").getValue();
+                }
+
+                try {
+                    meta.totalSize = Long.parseLong(response.getFirstHeader("Content-Length").getValue(), 10);
+                } catch (NullPointerException e) {
+                } catch (NumberFormatException e) {
+                }
+
+                try {
+                    meta.fileName = response.getFirstHeader("Content-Disposition").getElements()[0].getParameterByName("filename").getValue();
+                } catch (NullPointerException e) {
+                } catch (ParseException e) {
+                }
+                
+                if (meta.fileName == null) {
+                    try {
+                        meta.fileName = response.getFirstHeader("Content-Type").getElements()[0].getParameterByName("name").getValue();
+                    } catch (NullPointerException e) {
+                    } catch (ParseException e) {
+                    }
+                }
             }
+        } catch (IOException e) {
         }
 
         return meta;
