@@ -1,5 +1,6 @@
 package me.kstep.aget;
 
+import android.app.ActionBar;
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.view.LayoutInflater;
@@ -26,5 +27,21 @@ class PreferencesFragment extends PreferenceFragment {
                         ));
         }
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        ActionBar ab = getActivity().getActionBar();
+        ab.setHomeButtonEnabled(true);
+        ab.setDisplayHomeAsUpEnabled(true);
+    }
+
+    @Override
+    public void onStop() {
+        ActionBar ab = getActivity().getActionBar();
+        ab.setHomeButtonEnabled(false);
+        ab.setDisplayHomeAsUpEnabled(false);
+        super.onStop();
     }
 }

@@ -1,5 +1,7 @@
 package me.kstep.downloader;
 
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -17,6 +19,8 @@ public abstract class Downloader implements Runnable {
         public long totalSize = -1;
     }
 
+    @Setter static private ConnectivityManager connectivity;
+
     @Getter @Setter private Uri uri;
     @Getter @Setter private File file;
 
@@ -25,6 +29,7 @@ public abstract class Downloader implements Runnable {
     @Setter static protected int readTimeout = 5000;
     @Setter static private boolean defaultResume = true;
     @Setter static private boolean defaultInsecure = true;
+    @Setter static private boolean useWiFiOnly = false;
 
     @Getter protected long totalSize;
     public boolean isUnknownSize() {
@@ -124,6 +129,22 @@ public abstract class Downloader implements Runnable {
         BufferedOutputStream out = null;
 
         try {
+
+            NetworkInfo network = connectivity.getActiveNetworkInfo();
+            if (network == null || network.isConnected()) {
+                throw new IOException("No active network connection found");
+            }
+
+            if (useWiFiOnly) {
+                switch (network.getType()) {
+                case ConnectivityManager.TYPE_WIFI:
+                case ConnectivityManager.TYPE_ETHERNET:
+                    break;
+                default:
+                    throw new IOException("Non-WiFi network usage prohibited");
+                }
+            }
+
             // Initialize streams...
             in = new BufferedInputStream(is = openConnection(uri, file));
             out = new BufferedOutputStream(new FileOutputStream(file, resume));

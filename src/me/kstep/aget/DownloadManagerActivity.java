@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -31,6 +33,9 @@ public class DownloadManagerActivity extends ListActivity
 
     @SystemService
     NotificationManager notifications;
+
+    @SystemService
+    ConnectivityManager connectivity;
 
     ClipboardManager clipboard;
 
@@ -87,6 +92,12 @@ public class DownloadManagerActivity extends ListActivity
         Downloader.setBufferSize(prefs.bufferSize().get());
         Downloader.setDefaultResume(prefs.continueDownload().get());
         Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
+        Downloader.setUseWiFiOnly(prefs.useWiFiOnly().get());
+    }
+
+    @AfterInject
+    void injectConnectivityManagerToDownloader() {
+        Downloader.setConnectivity(connectivity);
     }
 
     @AfterInject
