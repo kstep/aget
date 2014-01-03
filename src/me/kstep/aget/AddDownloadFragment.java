@@ -8,12 +8,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import me.kstep.downloader.Download;
@@ -71,6 +73,69 @@ class AddDownloadFragment extends DialogFragment {
     }
 
     @AfterViews
+    void setupFieldListeners() {
+        downloadUrl.setOnFocusChangeListener(new View.OnFocusChangeListener () {
+            @Override
+            public void onFocusChange(View v, boolean focused) {
+                if (!focused) {
+                    updateUri(((TextView) v).getText().toString());
+                }
+            }
+        });
+        downloadUrl.setOnEditorActionListener(new TextView.OnEditorActionListener () {
+            @Override
+            public boolean onEditorAction(TextView tv, int actionId, KeyEvent ev) {
+                return updateUri(tv.getText().toString());
+            }
+        });
+
+        downloadName.setOnFocusChangeListener(new View.OnFocusChangeListener () {
+            @Override
+            public void onFocusChange(View v, boolean focused) {
+                if (!focused) {
+                    updateFileName(((TextView) v).getText().toString());
+                }
+            }
+        });
+        downloadName.setOnEditorActionListener(new TextView.OnEditorActionListener () {
+            @Override
+            public boolean onEditorAction(TextView tv, int actionId, KeyEvent ev) {
+                return updateFileName(tv.getText().toString());
+            }
+        });
+    }
+
+    boolean updateUri(String text) {
+        if (download != null) {
+            DownloadItem item = (DownloadItem) download.getItem();
+            item.setUri(text);
+            item.setFileNameFromUri();
+            item.setFileFolderByExtension();
+
+            downloadName.setText(item.getFileName());
+            downloadFolder.setSelection(getFolderId(item.getFileFolder()));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    boolean updateFileName(String text) {
+        if (download != null) {
+            DownloadItem item = (DownloadItem) download.getItem();
+            item.setFileName(text);
+            item.setFileFolderByExtension();
+
+            downloadFolder.setSelection(getFolderId(item.getFileFolder()));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    @AfterViews
     @UiThread
     void initBinding() {
         getDialog().setTitle("Add new download");
@@ -117,8 +182,15 @@ class AddDownloadFragment extends DialogFragment {
     void fetchName() {
         DownloadItem item = (DownloadItem) download.getItem();
         Downloader.FileMetaInfo meta = download.getDownloader().getMetaInfo(item.getUri(), item.getFile());
-        item.setFileName(meta.fileName);
+
+        if (meta.fileName == null || "".equals(meta.fileName)) {
+            item.setFileNameFromUri();
+        } else {
+            item.setFileName(meta.fileName);
+        }
+
         item.setFileFolderByExtension();
+
         initBinding();
     }
 
