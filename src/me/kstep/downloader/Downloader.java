@@ -131,7 +131,7 @@ public abstract class Downloader implements Runnable {
         try {
 
             NetworkInfo network = connectivity.getActiveNetworkInfo();
-            if (network == null || network.isConnected()) {
+            if (network == null || !network.isConnected()) {
                 throw new IOException("No active network connection found");
             }
 
