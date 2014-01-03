@@ -89,7 +89,7 @@ public class DownloadManagerActivity extends ListActivity
     void setupDownloadPrefs() {
         Downloader.setConnectTimeout(prefs.connectTimeout().get());
         Downloader.setReadTimeout(prefs.readTimeout().get());
-        Downloader.setBufferSize(prefs.bufferSize().get());
+        Downloader.setBufferSize(1024*prefs.bufferSize().get());
         Downloader.setDefaultResume(prefs.continueDownload().get());
         Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
         Downloader.setUseWiFiOnly(prefs.useWiFiOnly().get());
