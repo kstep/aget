@@ -164,17 +164,25 @@ class AddDownloadFragment extends DialogFragment {
 
     @Click
     void downloadEnqueueBtn() {
-        submit();
-        getListAdapter().addItem(download);
-        dismiss();
+        try {
+            submit();
+            getListAdapter().addItem(download);
+            dismiss();
+        } catch (UnsupportedOperationException e) {
+            Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Click
     void downloadStartBtn() {
-        submit();
-        getListAdapter().addItem(download);
-        download.start();
-        dismiss();
+        try {
+            submit();
+            getListAdapter().addItem(download);
+            download.start();
+            dismiss();
+        } catch (UnsupportedOperationException e) {
+            Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Click
