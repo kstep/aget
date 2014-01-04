@@ -58,17 +58,17 @@ class AddDownloadFragment extends DialogFragment {
         Environment.DIRECTORY_PICTURES,
         Environment.DIRECTORY_PODCASTS,
     };
+    final private static String[] FOLDER_NAMES = {
+        "Downloads",
+        "Movies",
+        "Music",
+        "Pictures",
+        "Podcasts",
+    };
 
     @AfterViews
     void initSpinner() {
-        final String[] folders = {
-            "Downloads",
-            "Movies",
-            "Music",
-            "Pictures",
-            "Podcasts",
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, folders);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, FOLDER_NAMES);
         downloadFolder.setAdapter(adapter);
     }
 
