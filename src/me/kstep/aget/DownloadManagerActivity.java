@@ -130,17 +130,23 @@ public class DownloadManagerActivity extends ListActivity
         downloadAdd(uri);
     }
 
+    private boolean preferencesVisible = false;
     @OptionsItem
     void downloadPrefs() {
-        getFragmentManager().beginTransaction()
-            .add(android.R.id.content, new PreferencesFragment_())
-            .addToBackStack(null)
-            .commit();
+        if (!preferencesVisible) {
+            getFragmentManager().beginTransaction()
+                .add(android.R.id.content, new PreferencesFragment_())
+                .addToBackStack(null)
+                .commit();
+            preferencesVisible = true;
+        }
     }
 
     @Override
     public void onBackPressed() {
-        if (!getFragmentManager().popBackStackImmediate()) {
+        if (getFragmentManager().popBackStackImmediate()) {
+            preferencesVisible = false;
+        } else {
             finish();
         }
     }
