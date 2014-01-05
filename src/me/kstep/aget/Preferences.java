@@ -2,7 +2,7 @@ package me.kstep.aget;
 
 import com.googlecode.androidannotations.annotations.sharedpreferences.*;
 
-@SharedPref
+@SharedPref(value=SharedPref.Scope.APPLICATION_DEFAULT)
 public interface Preferences {
     @DefaultInt(10240)
     int bufferSize();

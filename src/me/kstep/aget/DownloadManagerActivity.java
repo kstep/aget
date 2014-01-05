@@ -1,38 +1,33 @@
 package me.kstep.aget;
 
 import android.app.ListActivity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import com.googlecode.androidannotations.annotations.sharedpreferences.Pref;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
 import me.kstep.downloader.Download;
 import me.kstep.downloader.Downloader;
 
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
 public class DownloadManagerActivity extends ListActivity
-    implements Download.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
+    implements SharedPreferences.OnSharedPreferenceChangeListener, Download.Listener {
 
     @Bean
     DownloadsAdapter adapter;
-
-    @SystemService
-    NotificationManager notifications;
 
     @SystemService
     ConnectivityManager connectivity;
@@ -53,7 +48,6 @@ public class DownloadManagerActivity extends ListActivity
     @AfterViews
     void bindAdapter() {
         setListAdapter(adapter);
-        downloadNotifications = new HashMap<Download, Notification.Builder>();
     }
 
     @AfterViews
@@ -92,6 +86,7 @@ public class DownloadManagerActivity extends ListActivity
         Downloader.setBufferSize(prefs.bufferSize().get());
         Downloader.setDefaultResume(prefs.continueDownload().get());
         Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
+        android.util.Log.d("aGet", "useWiFiOnly: " + prefs.useWiFiOnly().get());
         Downloader.setUseWiFiOnly(prefs.useWiFiOnly().get());
     }
 
@@ -100,9 +95,43 @@ public class DownloadManagerActivity extends ListActivity
         Downloader.setConnectivity(connectivity);
     }
 
+    private DownloadManagerService downloadService;
+    private boolean downloadBound = false;
+    private ServiceConnection downloadConnection = new ServiceConnection () {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder binder) {
+            downloadService = (DownloadManagerService) ((DownloadManagerService.LocalBinder) binder).getService();
+            adapter.setDownloadList(downloadService.getDownloadList());
+            downloadService.subscribe(DownloadManagerActivity.this);
+            downloadBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            downloadBound = false;
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, DownloadManagerService_.class);
+        startService(intent);
+        bindService(intent, downloadConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (downloadBound) {
+            unbindService(downloadConnection);
+            downloadBound = false;
+        }
+    }
+
     @AfterInject
     void registerPrefsListener() {
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+        prefs.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -169,83 +198,21 @@ public class DownloadManagerActivity extends ListActivity
         addDownloadDialog.show(getFragmentManager(), "addDownload");
     }
 
-    HashMap<Download,Notification.Builder> downloadNotifications;
-
-    public void downloadChanged(Download proxy) {
-        adapter.notifyDataSetChanged();
-        getListView().requestFocusFromTouch();
-
-        Downloader downloader = proxy.getDownloader();
-        DownloadItem item = (DownloadItem) proxy.getItem();
-
-        Download.Status status = proxy.getStatus();
-        int progress = downloader.getProgressInt();
-        String statusName = (
-                status == Download.Status.INITIAL? "… ":
-                status == Download.Status.STARTED? "▶ ":
-                status == Download.Status.PAUSED? "|| ":
-                status == Download.Status.FINISHED? "✓ ":
-                status == Download.Status.CANCELED? "■ ":
-                status == Download.Status.FAILED? "✗ ":
-                "? "
-                );
-
-        Notification.Builder notify;
-        PendingIntent pi = PendingIntent.getActivity(
-                this, 0,
-                new Intent(this, DownloadManagerActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                PendingIntent.FLAG_UPDATE_CURRENT
-                );
-        if (downloadNotifications.containsKey(proxy)) {
-            notify = downloadNotifications.get(proxy);
-        } else {
-            notify = new Notification.Builder(this)
-              .setSmallIcon(R.drawable.ic_launcher)
-              .setContentIntent(pi)
-              //.addAction(R.drawable.ic_action_settings, "Open", pi)
-              //.addAction(R.drawable.ic_action_cancel, "Cancel", pi)
-              ;
-            downloadNotifications.put(proxy, notify);
-        }
-
-        notify.setContentTitle(statusName + item.getFileName())
-              .setOngoing(status == Download.Status.STARTED)
-              //.addAction(
-                      //status == DownloadItem.Status.STARTED? R.drawable.ic_action_pause:
-                      //status == DownloadItem.Status.FINISHED? R.drawable.ic_action_replay:
-                      //R.drawable.ic_action_play,
-                      //status == DownloadItem.Status.STARTED? "Pause":
-                      //status == DownloadItem.Status.FINISHED? "Restart":
-                      //"Start", pi)
-              .setContentInfo(String.format("%s | %d%%",
-                          Util.humanizeTime(downloader.getTimeLeft()),
-                          progress
-                          ))
-              .setContentText(String.format("%s/%s @ %s/s",
-                          Util.humanizeSize(downloader.getDownloadedSize()),
-                          Util.humanizeSize(downloader.getTotalSize()),
-                          Util.humanizeSize(downloader.getLastSpeed())
-                          ))
-              ;
-
-        if (status == Download.Status.STARTED || status == Download.Status.PAUSED || status == Download.Status.FAILED) {
-            notify.setProgress(100, progress, downloader.isUnknownSize() && status == Download.Status.STARTED);
-        } else {
-            notify.setProgress(0, 0, false);
-        }
-
-        notifications.notify(item.hashCode(), notify.build());
-    }
-
-    public void downloadFailed(Download proxy, Throwable e) {
-        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-    }
-
     @ItemClick
     public void listItemClicked(Download proxy) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.fromFile(proxy.getItem().getFile()));
         startActivity(intent);
     }
+
+    @Override
+    public void downloadChanged(Download proxy) {
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void downloadFailed(Download proxy, Throwable e) {
+        adapter.notifyDataSetChanged();
+    }
+
 }
