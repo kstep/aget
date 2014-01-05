@@ -25,7 +25,13 @@ public class DownloadManagerService extends Service
     NotificationManager notifications;
 
     private HashMap<Download,Notification.Builder> downloadNotifications;
+
+    @Override
     public void downloadChanged(Download proxy) {
+        for (Download.Listener subscriber : subscribers) {
+            subscriber.downloadChanged(proxy);
+        }
+
         Downloader downloader = proxy.getDownloader();
         DownloadItem item = (DownloadItem) proxy.getItem();
 
@@ -89,7 +95,12 @@ public class DownloadManagerService extends Service
         notifications.notify(item.hashCode(), notify.build());
     }
 
+    @Override
     public void downloadFailed(Download proxy, Throwable e) {
+        for (Download.Listener subscriber : subscribers) {
+            subscriber.downloadFailed(proxy, e);
+        }
+
         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
 
@@ -146,5 +157,10 @@ public class DownloadManagerService extends Service
     private List<Download> items;
     public List<Download> getDownloadList() {
         return items;
+    }
+
+    List<Download.Listener> subscribers = new LinkedList<Download.Listener>();
+    public void subscribe(Download.Listener subscriber) {
+        subscribers.add(subscriber);
     }
 }

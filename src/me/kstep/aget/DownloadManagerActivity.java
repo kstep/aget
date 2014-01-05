@@ -24,7 +24,7 @@ import me.kstep.downloader.Downloader;
 @EActivity(R.layout.main)
 @OptionsMenu(R.menu.main_activity_actions)
 public class DownloadManagerActivity extends ListActivity
-    implements SharedPreferences.OnSharedPreferenceChangeListener {
+    implements SharedPreferences.OnSharedPreferenceChangeListener, Download.Listener {
 
     @Bean
     DownloadsAdapter adapter;
@@ -86,6 +86,7 @@ public class DownloadManagerActivity extends ListActivity
         Downloader.setBufferSize(prefs.bufferSize().get());
         Downloader.setDefaultResume(prefs.continueDownload().get());
         Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
+        android.util.Log.d("aGet", "useWiFiOnly: " + prefs.useWiFiOnly().get());
         Downloader.setUseWiFiOnly(prefs.useWiFiOnly().get());
     }
 
@@ -101,6 +102,7 @@ public class DownloadManagerActivity extends ListActivity
         public void onServiceConnected(ComponentName className, IBinder binder) {
             downloadService = (DownloadManagerService) ((DownloadManagerService.LocalBinder) binder).getService();
             adapter.setDownloadList(downloadService.getDownloadList());
+            downloadService.subscribe(DownloadManagerActivity.this);
             downloadBound = true;
         }
 
@@ -113,7 +115,7 @@ public class DownloadManagerActivity extends ListActivity
     @Override
     protected void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, DownloadManagerService.class);
+        Intent intent = new Intent(this, DownloadManagerService_.class);
         startService(intent);
         bindService(intent, downloadConnection, BIND_AUTO_CREATE);
     }
@@ -129,7 +131,7 @@ public class DownloadManagerActivity extends ListActivity
 
     @AfterInject
     void registerPrefsListener() {
-        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+        prefs.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -202,4 +204,15 @@ public class DownloadManagerActivity extends ListActivity
         intent.setData(Uri.fromFile(proxy.getItem().getFile()));
         startActivity(intent);
     }
+
+    @Override
+    public void downloadChanged(Download proxy) {
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void downloadFailed(Download proxy, Throwable e) {
+        adapter.notifyDataSetChanged();
+    }
+
 }

@@ -204,7 +204,7 @@ class AddDownloadFragment extends DialogFragment {
     }
 
     void submit(boolean start) {
-        Intent intent = new Intent(getActivity(), DownloadManagerService.class);
+        Intent intent = new Intent(getActivity(), DownloadManagerService_.class);
 
         intent.setData(Uri.parse(downloadUrl.getText().toString()));
         intent.putExtra("fileName", downloadName.getText().toString());
