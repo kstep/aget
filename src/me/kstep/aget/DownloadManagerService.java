@@ -143,6 +143,10 @@ public class DownloadManagerService extends Service
 
     @Override
     public void onDestroy() {
+        for (Download item : items) {
+            item.stop();
+        }
+
         try {
             ObjectOutputStream os = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
             os.writeObject(items);

@@ -1,9 +1,11 @@
 package me.kstep.aget;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -132,6 +134,30 @@ public class DownloadManagerActivity extends ListActivity
         ClipData clip = clipboard.getPrimaryClip();
         String uri = clip == null? null: clip.getItemAt(0).coerceToText(this).toString();
         downloadAdd(uri);
+    }
+
+    @OptionsItem
+    void downloadExit() {
+        new AlertDialog.Builder(this)
+            .setTitle("Exit aGet?")
+            .setMessage("All downloads will be stopped. You can resume them when you start aGet again.")
+            .setNegativeButton("No", new DialogInterface.OnClickListener () {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            })
+            .setPositiveButton("Yes", new DialogInterface.OnClickListener () {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                    unbindService(downloadConnection);
+                    downloadBound = false;
+                    stopService(new Intent(DownloadManagerActivity.this, DownloadManagerService_.class));
+                    finish();
+                }
+            })
+            .show();
     }
 
     private boolean preferencesVisible = false;

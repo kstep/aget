@@ -130,11 +130,10 @@ public class Download implements Downloader.Listener, Serializable, Parcelable {
     public void downloadFailed(Downloader d, final Throwable e) {
         status = Status.FAILED;
         if (listener != null) {
-            final Download self = this;
             handler.post(new Runnable () {
                 @Override
                 public void run() {
-                    listener.downloadFailed(self, e);
+                    listener.downloadFailed(Download.this, e);
                 }
             });
         }
@@ -142,11 +141,10 @@ public class Download implements Downloader.Listener, Serializable, Parcelable {
 
     private void notifyListener() {
         if (listener != null) {
-            final Download self = this;
             handler.post(new Runnable () {
                 @Override
                 public void run() {
-                    listener.downloadChanged(self);
+                    listener.downloadChanged(Download.this);
                 }
             });
         }
