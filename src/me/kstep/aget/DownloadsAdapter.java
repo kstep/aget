@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
-import java.util.LinkedList;
 import java.util.List;
 import me.kstep.downloader.Download;
 import me.kstep.downloader.Downloadable;
@@ -24,12 +23,7 @@ class DownloadsAdapter extends BaseAdapter {
     @RootContext
     DownloadManagerActivity mainActivity;
 
-    List<Download> items;
-
-    @AfterInject
-    public void initItems() {
-        items = new LinkedList<Download>();
-    }
+    List<Download> items = null;
 
     @SuppressWarnings("unchecked")
     public void loadFromStream(ObjectInputStream is) {
@@ -49,6 +43,11 @@ class DownloadsAdapter extends BaseAdapter {
         //}
     }
 
+    public void setDownloadList(List<Download> list) {
+        items = list;
+        notifyDataSetChanged();
+    }
+
     @Override
     public View getView(int pos, View view, ViewGroup parent) {
         DownloadView downloadView = view == null? DownloadView_.build(context): (DownloadView) view;
@@ -58,25 +57,29 @@ class DownloadsAdapter extends BaseAdapter {
     }
 
     public void removeItem(Download item) {
-        //try { item.stop(); } catch (IllegalStateException e) {}
-        items.remove(item);
-        notifyDataSetChanged();
+        if (items != null) {
+            //try { item.stop(); } catch (IllegalStateException e) {}
+            items.remove(item);
+            notifyDataSetChanged();
+        }
     }
 
     public void removeItem(int pos) {
-        //try { getItem(pos).stop(); } catch (IllegalStateException e) {}
-        items.remove(pos);
-        notifyDataSetChanged();
+        if (items != null) {
+            //try { getItem(pos).stop(); } catch (IllegalStateException e) {}
+            items.remove(pos);
+            notifyDataSetChanged();
+        }
     }
 
     @Override
     public int getCount() {
-        return items.size();
+        return items == null? 0: items.size();
     }
 
     @Override
     public Download getItem(int pos) {
-        return items.get(pos);
+        return items == null? null: items.get(pos);
     }
 
     @Override
@@ -85,12 +88,14 @@ class DownloadsAdapter extends BaseAdapter {
     }
 
     public void addItem(Download item) {
-        items.add(item);
-        notifyDataSetChanged();
+        if (items != null) {
+            items.add(item);
+            notifyDataSetChanged();
+        }
     }
 
     public void addItem(Downloadable item) {
-        items.add(new Download(item));
+        addItem(new Download(item));
     }
 
     public void addItem(String url) {

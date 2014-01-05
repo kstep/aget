@@ -122,7 +122,7 @@ public class DownloadView extends RelativeLayout {
         int percent = downloader.getProgressInt();
         long timeLeft = downloader.getTimeLeft();
 
-        Download.Status status = download.getStatus();
+        int status = download.getStatus();
 
         downloadFilename.setText(item.getFileName());
         downloadSize.setText(String.format("%s/%s @ %s/s", Util.humanizeSize(downloadedSize), Util.humanizeSize(totalSize), Util.humanizeSize(lastSpeed)));
@@ -130,7 +130,7 @@ public class DownloadView extends RelativeLayout {
 
         downloadProgress.setIndeterminate(false);
         switch (status) {
-            case FINISHED:
+            case Download.Status.FINISHED:
                 downloadProgress.setProgress(100);
 
                 downloadPause.setVisibility(View.INVISIBLE);
@@ -138,17 +138,17 @@ public class DownloadView extends RelativeLayout {
                 downloadReload.setVisibility(View.VISIBLE);
                 break;
 
-            case INITIAL:
+            case Download.Status.INITIAL:
                 downloadProgress.setProgress(0);
 
-            case PAUSED:
-            case FAILED:
+            case Download.Status.PAUSED:
+            case Download.Status.FAILED:
                 downloadPause.setVisibility(View.INVISIBLE);
                 downloadStart.setVisibility(View.VISIBLE);
                 downloadReload.setVisibility(View.INVISIBLE);
                 break;
 
-            case STARTED:
+            case Download.Status.STARTED:
                 downloadPause.setVisibility(View.VISIBLE);
                 downloadStart.setVisibility(View.INVISIBLE);
                 downloadReload.setVisibility(View.INVISIBLE);

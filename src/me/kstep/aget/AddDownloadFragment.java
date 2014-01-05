@@ -6,6 +6,8 @@ import android.app.DialogFragment;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.KeyEvent;
@@ -20,6 +22,7 @@ import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
 import me.kstep.downloader.Download;
 import me.kstep.downloader.Downloader;
+import me.kstep.downloader.DownloaderFactory;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadFragment extends DialogFragment {
@@ -106,8 +109,7 @@ class AddDownloadFragment extends DialogFragment {
     }
 
     boolean updateUri(String text) {
-        if (download != null) {
-            DownloadItem item = (DownloadItem) download.getItem();
+        if (item != null) {
             item.setUri(text);
             item.setFileNameFromUri();
             item.setFileFolderByExtension();
@@ -122,8 +124,7 @@ class AddDownloadFragment extends DialogFragment {
     }
 
     boolean updateFileName(String text) {
-        if (download != null) {
-            DownloadItem item = (DownloadItem) download.getItem();
+        if (item != null) {
             item.setFileName(text);
             item.setFileFolderByExtension();
 
@@ -140,17 +141,14 @@ class AddDownloadFragment extends DialogFragment {
     void initBinding() {
         getDialog().setTitle("Add new download");
 
-        if (download == null) return;
-
-        DownloadItem item = (DownloadItem) download.getItem();
-        Downloader downloader = download.getDownloader();
+        if (item == null) return;
 
         downloadUrl.setText(item.getUri() == null? "": item.getUri().toString());
         downloadName.setText(item.getFileName() == null? "": item.getFileName());
         downloadFolder.setSelection(getFolderId(item.getFileFolder()));
 
-        downloadContinue.setChecked(downloader.isResume());
-        downloadIgnoreCert.setChecked(downloader.isInsecure());
+        downloadContinue.setChecked(Downloader.isDefaultResume());
+        downloadIgnoreCert.setChecked(Downloader.isDefaultInsecure());
     }
 
     DownloadsAdapter getListAdapter() {
@@ -165,8 +163,7 @@ class AddDownloadFragment extends DialogFragment {
     @Click
     void downloadEnqueueBtn() {
         try {
-            submit();
-            getListAdapter().addItem(download);
+            submit(false);
             dismiss();
         } catch (UnsupportedOperationException e) {
             Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
@@ -176,20 +173,19 @@ class AddDownloadFragment extends DialogFragment {
     @Click
     void downloadStartBtn() {
         try {
-            submit();
-            getListAdapter().addItem(download);
-            download.start();
+            submit(true);
             dismiss();
         } catch (UnsupportedOperationException e) {
             Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
         }
     }
 
+    DownloaderFactory downloaderFactory = new DownloaderFactory();
+
     @Click
     @Background
     void fetchName() {
-        DownloadItem item = (DownloadItem) download.getItem();
-        Downloader.FileMetaInfo meta = download.getDownloader().getMetaInfo(item.getUri(), item.getFile());
+        Downloader.FileMetaInfo meta = downloaderFactory.newDownloader(item).getMetaInfo(item.getUri(), item.getFile());
 
         if (meta.fileName == null || "".equals(meta.fileName)) {
             item.setFileNameFromUri();
@@ -202,26 +198,22 @@ class AddDownloadFragment extends DialogFragment {
         initBinding();
     }
 
-    Download download = null;
+    DownloadItem item = null;
     void bind(DownloadItem item) {
-        download = new Download(item);
+        this.item = item;
     }
 
-    void submit(Download download) {
-        download.setListener((Download.Listener) getActivity());
+    void submit(boolean start) {
+        Intent intent = new Intent(getActivity(), DownloadManagerService.class);
 
-        DownloadItem item = (DownloadItem) download.getItem();
-        item.setUri(downloadUrl.getText().toString());
-        item.setFileName(downloadName.getText().toString());
-        item.setFileFolder(getFolderHandle(downloadFolder.getSelectedItemPosition()));
+        intent.setData(Uri.parse(downloadUrl.getText().toString()));
+        intent.putExtra("fileName", downloadName.getText().toString());
+        intent.putExtra("fileFolder", getFolderHandle(downloadFolder.getSelectedItemPosition()));
+        intent.putExtra("insecure", downloadIgnoreCert.isChecked());
+        intent.putExtra("resume", downloadContinue.isChecked());
+        intent.putExtra("start", start);
 
-        Downloader downloader = download.getDownloader();
-        downloader.setInsecure(downloadIgnoreCert.isChecked());
-        downloader.setResume(downloadContinue.isChecked());
-    }
-
-    void submit() {
-        submit(download);
+        getActivity().startService(intent);
     }
 
     String getFolderHandle(int id) {
