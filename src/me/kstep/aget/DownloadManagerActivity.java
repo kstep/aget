@@ -86,7 +86,6 @@ public class DownloadManagerActivity extends ListActivity
         Downloader.setBufferSize(prefs.bufferSize().get());
         Downloader.setDefaultResume(prefs.continueDownload().get());
         Downloader.setDefaultInsecure(prefs.ignoreCertificates().get());
-        android.util.Log.d("aGet", "useWiFiOnly: " + prefs.useWiFiOnly().get());
         Downloader.setUseWiFiOnly(prefs.useWiFiOnly().get());
     }
 
