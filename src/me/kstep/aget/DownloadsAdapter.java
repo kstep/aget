@@ -25,24 +25,6 @@ class DownloadsAdapter extends BaseAdapter {
 
     List<Download> items = null;
 
-    @SuppressWarnings("unchecked")
-    public void loadFromStream(ObjectInputStream is) {
-        //try {
-            //items = (List<DownloadItem>) is.readObject();
-            //notifyDataSetChanged();
-        //} catch (OptionalDataException e) {
-        //} catch (ClassNotFoundException e) {
-        //} catch (IOException e) {
-        //}
-    }
-
-    public void saveToStream(ObjectOutputStream os) {
-        //try {
-            //os.writeObject(items);
-        //} catch (IOException e) {
-        //}
-    }
-
     public void setDownloadList(List<Download> list) {
         items = list;
         notifyDataSetChanged();

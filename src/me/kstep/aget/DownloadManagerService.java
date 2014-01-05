@@ -11,6 +11,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 import com.googlecode.androidannotations.annotations.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -116,9 +121,36 @@ public class DownloadManagerService extends Service
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onCreate() {
-        items = new LinkedList<Download>();
+        super.onCreate();
+
+        try {
+            ObjectInputStream is = new ObjectInputStream(openFileInput("downloads.bin"));
+            items = (List<Download>) is.readObject();
+
+        } catch (OptionalDataException e) {
+        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
+        }
+
+        if (items == null) {
+            items = new LinkedList<Download>();
+        }
+
         downloadNotifications = new HashMap<Download, Notification.Builder>();
+    }
+
+    @Override
+    public void onDestroy() {
+        try {
+            ObjectOutputStream os = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
+            os.writeObject(items);
+
+        } catch (IOException e) {
+        }
+
+        super.onDestroy();
     }
 
     @Override
@@ -154,7 +186,7 @@ public class DownloadManagerService extends Service
         return binder;
     }
 
-    private List<Download> items;
+    private List<Download> items = null;
     public List<Download> getDownloadList() {
         return items;
     }

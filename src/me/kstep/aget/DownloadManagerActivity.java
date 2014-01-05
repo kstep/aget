@@ -68,17 +68,6 @@ public class DownloadManagerActivity extends ListActivity
         }
     }
 
-    @AfterViews
-    void loadDownloadsList() {
-        try {
-            ObjectInputStream io = new ObjectInputStream(openFileInput("downloads.bin"));
-            adapter.loadFromStream(io);
-
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-    }
-
     @AfterInject
     void setupDownloadPrefs() {
         Downloader.setConnectTimeout(prefs.connectTimeout().get());
@@ -136,19 +125,6 @@ public class DownloadManagerActivity extends ListActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
         setupDownloadPrefs();
-    }
-
-    @Override
-    protected void onPause() {
-        try {
-            ObjectOutputStream io = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
-            adapter.saveToStream(io);
-
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-
-        super.onPause();
     }
 
     @OptionsItem
