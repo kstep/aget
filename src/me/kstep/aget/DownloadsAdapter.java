@@ -40,7 +40,6 @@ class DownloadsAdapter extends BaseAdapter {
 
     public void removeItem(Download item) {
         if (items != null) {
-            //try { item.stop(); } catch (IllegalStateException e) {}
             items.remove(item);
             notifyDataSetChanged();
         }
@@ -48,7 +47,6 @@ class DownloadsAdapter extends BaseAdapter {
 
     public void removeItem(int pos) {
         if (items != null) {
-            //try { getItem(pos).stop(); } catch (IllegalStateException e) {}
             items.remove(pos);
             notifyDataSetChanged();
         }

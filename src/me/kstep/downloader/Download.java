@@ -158,9 +158,10 @@ public class Download implements Downloader.Listener, Serializable, Parcelable {
         return job != null && !job.isDone() && !job.isCancelled();
     }
 
-    private void startJob() {
+    private boolean startJob() {
         if (isJobRunning()) {
-            throw new IllegalStateException("Trying to start an already running download process");
+            return false;
+            //throw new IllegalStateException("Trying to start an already running download process");
         }
 
         Downloader downloader = getDownloader();
@@ -168,14 +169,17 @@ public class Download implements Downloader.Listener, Serializable, Parcelable {
         downloader.setFile(item.getFile());
 
         job = getJobsPool().submit(downloader);
+        return true;
     }
 
-    private void stopJob() {
+    private boolean stopJob() {
         if (!isJobRunning()) {
-            throw new IllegalStateException("Trying to stop a not running download process");
+            return false;
+            //throw new IllegalStateException("Trying to stop a not running download process");
         }
 
         job.cancel(true);
+        return true;
     }
     // }}}
 

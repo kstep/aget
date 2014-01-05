@@ -87,7 +87,7 @@ public class DownloadView extends RelativeLayout {
             .setNeutralButton("Remove", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    try { item.stop(); } catch (IllegalStateException e) {}
+                    item.stop();
                     adapter.removeItem(item);
                     requestFocusFromTouch();
                 }
@@ -95,7 +95,7 @@ public class DownloadView extends RelativeLayout {
             .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
-                    try { item.cancel(); } catch (IllegalStateException e) {}
+                    item.cancel();
                     adapter.removeItem(item);
                     requestFocusFromTouch();
                 }
