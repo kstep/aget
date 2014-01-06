@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">aGet</string>
+    <string name="svc_name">aGet Download Service</string>
 
     <string name="exit_question">Exit aGet?</string>
     <string name="exit_message">All downloads will be stopped. You can resume them when you start aGet again.</string>
@@ -12,11 +13,11 @@
     <string name="add_new_download_title">Add new download</string>
     
     <string-array name="folder_names">
-    <item>Downloads</item>
-    <item>Movies</item>
-    <item>Music</item>
-    <item>Pictures</item>
-    <item>Podcasts</item>
+        <item>Downloads</item>
+        <item>Movies</item>
+        <item>Music</item>
+        <item>Pictures</item>
+        <item>Podcasts</item>
     </string-array>
     
     <string name="remove_question">Remove download item?</string>
