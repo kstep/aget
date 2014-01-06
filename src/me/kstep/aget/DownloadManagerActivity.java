@@ -139,15 +139,15 @@ public class DownloadManagerActivity extends ListActivity
     @OptionsItem
     void downloadExit() {
         new AlertDialog.Builder(this)
-            .setTitle("Exit aGet?")
-            .setMessage("All downloads will be stopped. You can resume them when you start aGet again.")
-            .setNegativeButton("No", new DialogInterface.OnClickListener () {
+            .setTitle(R.string.exit_question)
+            .setMessage(R.string.exit_message)
+            .setNegativeButton(R.string.no, new DialogInterface.OnClickListener () {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     dialog.dismiss();
                 }
             })
-            .setPositiveButton("Yes", new DialogInterface.OnClickListener () {
+            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener () {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     dialog.dismiss();

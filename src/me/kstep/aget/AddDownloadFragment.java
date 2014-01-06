@@ -21,6 +21,7 @@ import com.googlecode.androidannotations.annotations.*;
 import me.kstep.downloader.Download;
 import me.kstep.downloader.Downloader;
 import me.kstep.downloader.DownloaderFactory;
+import android.content.res.Resources;
 
 @EFragment(R.layout.add_download_item)
 class AddDownloadFragment extends DialogFragment {
@@ -59,17 +60,10 @@ class AddDownloadFragment extends DialogFragment {
         Environment.DIRECTORY_PICTURES,
         Environment.DIRECTORY_PODCASTS,
     };
-    final private static String[] FOLDER_NAMES = {
-        "Downloads",
-        "Movies",
-        "Music",
-        "Pictures",
-        "Podcasts",
-    };
 
     @AfterViews
     void initSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, FOLDER_NAMES);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.folder_names));
         downloadFolder.setAdapter(adapter);
     }
 
@@ -137,7 +131,7 @@ class AddDownloadFragment extends DialogFragment {
     @AfterViews
     @UiThread
     void initBinding() {
-        getDialog().setTitle("Add new download");
+        getDialog().setTitle(R.string.add_new_download_title);
 
         if (item == null) return;
 
@@ -160,22 +154,14 @@ class AddDownloadFragment extends DialogFragment {
 
     @Click
     void downloadEnqueueBtn() {
-        try {
-            submit(false);
-            dismiss();
-        } catch (UnsupportedOperationException e) {
-            Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
-        }
+        submit(false);
+        dismiss();
     }
 
     @Click
     void downloadStartBtn() {
-        try {
-            submit(true);
-            dismiss();
-        } catch (UnsupportedOperationException e) {
-            Toast.makeText(getActivity(), "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
-        }
+        submit(true);
+        dismiss();
     }
 
     DownloaderFactory downloaderFactory = new DownloaderFactory();

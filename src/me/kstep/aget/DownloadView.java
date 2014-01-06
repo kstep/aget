@@ -76,15 +76,15 @@ public class DownloadView extends RelativeLayout {
         final DownloadsAdapter adapter = getListAdapter();
 
         new AlertDialog.Builder(getContext())
-            .setTitle("Remove download item?")
-            .setMessage("You can re-add the same URL again with “Continue download” option on to resume downloading.")
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            .setTitle(R.string.remove_question)
+            .setMessage(R.string.remove_message)
+            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     dialog.dismiss();
                 }
             })
-            .setNeutralButton("Remove", new DialogInterface.OnClickListener() {
+            .setNeutralButton(R.string.remove, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     item.stop();
@@ -92,7 +92,7 @@ public class DownloadView extends RelativeLayout {
                     requestFocusFromTouch();
                 }
             })
-            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int id) {
                     item.cancel();

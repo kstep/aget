@@ -227,7 +227,7 @@ public class DownloadManagerService extends Service
 		}
 
 	    } catch (UnsupportedOperationException e) {
-                Toast.makeText(this, "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.error_bad_uri, Toast.LENGTH_LONG).show();
 	    }
         }
 
