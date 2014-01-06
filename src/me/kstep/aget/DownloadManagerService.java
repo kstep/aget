@@ -205,26 +205,30 @@ public class DownloadManagerService extends Service
         if (uri != null) {
             Bundle extras = intent.getExtras();
 
-            DownloadItem item = new DownloadItem(intent.getData());
-            item.setFileName(extras.getString("fileName"));
-            item.setFileFolder(extras.getString("fileFolder"));
+	    try {
+		DownloadItem item = new DownloadItem(intent.getData());
+		item.setFileName(extras.getString("fileName"));
+		item.setFileFolder(extras.getString("fileFolder"));
+		Download download = new Download(item);
+		Downloader downloader = download.getDownloader();
+		downloader.setInsecure(extras.getBoolean("insecure"));
+		downloader.setResume(extras.getBoolean("resume"));
 
-            Download download = new Download(item);
-            Downloader downloader = download.getDownloader();
-            downloader.setInsecure(extras.getBoolean("insecure"));
-            downloader.setResume(extras.getBoolean("resume"));
+		download.setListener(this);
 
-            download.setListener(this);
+		items.add(download);
 
-            items.add(download);
+		if (extras.getBoolean("start")) {
+		    download.start();
+		}
 
-            if (extras.getBoolean("start")) {
-                download.start();
-            }
+		for (Download.Listener subscriber : subscribers) {
+		    subscriber.downloadChanged(download);
+		}
 
-            for (Download.Listener subscriber : subscribers) {
-                subscriber.downloadChanged(download);
-            }
+	    } catch (UnsupportedOperationException e) {
+                Toast.makeText(this, "Invalid or unsupported URL", Toast.LENGTH_LONG).show();
+	    }
         }
 
         return START_STICKY;
