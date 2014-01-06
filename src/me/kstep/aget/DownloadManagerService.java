@@ -17,6 +17,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,9 +36,7 @@ public class DownloadManagerService extends Service
 
     @Override
     public void downloadChanged(Download proxy) {
-        for (Download.Listener subscriber : subscribers) {
-            subscriber.downloadChanged(proxy);
-        }
+        notifySubscribers(proxy);
 
         Downloader downloader = proxy.getDownloader();
         DownloadItem item = (DownloadItem) proxy.getItem();
@@ -103,8 +103,11 @@ public class DownloadManagerService extends Service
 
     @Override
     public void downloadFailed(Download proxy, Throwable e) {
-        for (Download.Listener subscriber : subscribers) {
-            subscriber.downloadFailed(proxy, e);
+        for (WeakReference<Download.Listener> subscriber : subscribers) {
+	    try {
+                subscriber.get().downloadFailed(proxy, e);
+	    } catch (NullPointerException _) {
+	    }
         }
 
         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -222,9 +225,7 @@ public class DownloadManagerService extends Service
 		    download.start();
 		}
 
-		for (Download.Listener subscriber : subscribers) {
-		    subscriber.downloadChanged(download);
-		}
+		notifySubscribers(download);
 
 	    } catch (UnsupportedOperationException e) {
                 Toast.makeText(this, R.string.error_bad_uri, Toast.LENGTH_LONG).show();
@@ -245,8 +246,27 @@ public class DownloadManagerService extends Service
         return items;
     }
 
-    List<Download.Listener> subscribers = new LinkedList<Download.Listener>();
+    List<WeakReference<Download.Listener>> subscribers = new LinkedList<WeakReference<Download.Listener>>();
     public void subscribe(Download.Listener subscriber) {
-        subscribers.add(subscriber);
+        subscribers.add(new WeakReference<Download.Listener>(subscriber));
+    }
+    
+    private void notifySubscribers(Download download) {
+	Iterator<WeakReference<Download.Listener>> iter = subscribers.iterator();
+	int removed = 0;
+
+	while (iter.hasNext()) {
+	    Download.Listener subscriber = iter.next().get();
+	    if (subscriber == null) {
+		iter.remove();
+		removed++;
+	    } else {
+		subscriber.downloadChanged(download);
+	    }
+	}
+
+	if (removed > 0) {
+	    System.gc();
+	}
     }
 }
