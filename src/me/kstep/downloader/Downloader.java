@@ -11,12 +11,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class Downloader implements Runnable, Serializable, Parcelable {
-    private static final long serialVersionUID = 0L;
+public abstract class Downloader implements Runnable, Parcelable {
 
     public static class FileMetaInfo {
         public String mimeType = null;

@@ -154,7 +154,7 @@ public class DownloadManagerActivity extends ListActivity
                     unbindService(downloadConnection);
                     downloadBound = false;
                     stopService(new Intent(DownloadManagerActivity.this, DownloadManagerService_.class));
-                    finish();
+                    DownloadManagerActivity.this.finish();
                 }
             })
             .show();

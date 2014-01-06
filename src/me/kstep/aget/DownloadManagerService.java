@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OptionalDataException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -120,22 +121,55 @@ public class DownloadManagerService extends Service
         }
     }
 
+    private static class SerializableDownloadItem implements Serializable {
+        private static final long serialVersionUID = 0L;
+
+        String uri;
+        String folder;
+        String file;
+
+        SerializableDownloadItem(String uri, String folder, String file) {
+            this.uri = uri;
+            this.folder = folder;
+            this.file = file;
+        }
+
+        SerializableDownloadItem(Uri uri, String folder, String file) {
+            this(uri.toString(), folder, file);
+        }
+
+        SerializableDownloadItem(DownloadItem item) {
+            this(item.getUri(), item.getFileFolder(), item.getFileName());
+        }
+
+        Download getDownload() {
+            DownloadItem item = new DownloadItem(uri, file);
+            item.setFileFolder(folder);
+            return new Download(item);
+        }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void onCreate() {
         super.onCreate();
 
+        items = new LinkedList<Download>();
+
+        ObjectInputStream is = null;
         try {
-            ObjectInputStream is = new ObjectInputStream(openFileInput("downloads.bin"));
-            items = (List<Download>) is.readObject();
+            is = new ObjectInputStream(openFileInput("downloads.bin"));
+            while (true) {
+                items.add(((SerializableDownloadItem) is.readObject()).getDownload());
+            }
 
         } catch (OptionalDataException e) {
         } catch (ClassNotFoundException e) {
         } catch (IOException e) {
-        }
-
-        if (items == null) {
-            items = new LinkedList<Download>();
+        } finally {
+            if (is != null) {
+                try { is.close(); } catch (IOException e) {}
+            }
         }
 
         downloadNotifications = new HashMap<Download, Notification.Builder>();
@@ -147,11 +181,18 @@ public class DownloadManagerService extends Service
             item.stop();
         }
 
+        ObjectOutputStream os = null;
         try {
-            ObjectOutputStream os = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
-            os.writeObject(items);
+            os = new ObjectOutputStream(openFileOutput("downloads.bin", MODE_PRIVATE));
+            for (Download item : items) {
+                os.writeObject(new SerializableDownloadItem((DownloadItem) item.getItem()));
+            }
 
         } catch (IOException e) {
+        } finally {
+            if (os != null) {
+                try { os.close(); } catch (IOException e) {}
+            }
         }
 
         super.onDestroy();

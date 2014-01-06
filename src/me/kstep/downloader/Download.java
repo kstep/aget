@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
 import java.io.File;
-import java.io.Serializable;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,8 +12,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Download implements Downloader.Listener, Serializable, Parcelable {
-    private static final long serialVersionUID = 0L;
+public class Download implements Downloader.Listener, Parcelable {
 
     public Download(Downloadable i) {
         item = i;
