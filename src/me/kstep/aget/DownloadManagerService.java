@@ -176,8 +176,13 @@ public class DownloadManagerService extends Service
             download.setListener(this);
 
             items.add(download);
+
             if (extras.getBoolean("start")) {
                 download.start();
+            }
+
+            for (Download.Listener subscriber : subscribers) {
+                subscriber.downloadChanged(download);
             }
         }
 
