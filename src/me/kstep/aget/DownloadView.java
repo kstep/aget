@@ -6,14 +6,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.googlecode.androidannotations.annotations.*;
-import me.kstep.downloader.Downloader;
 import me.kstep.downloader.Download;
+import me.kstep.downloader.Downloader;
 
 @EViewGroup(R.layout.download_item)
 public class DownloadView extends RelativeLayout {
@@ -30,16 +30,16 @@ public class DownloadView extends RelativeLayout {
     ProgressBar downloadProgress;
 
     @ViewById
-    Button downloadStart;
+    ImageButton downloadStart;
 
     @ViewById
-    Button downloadReload;
+    ImageButton downloadReload;
 
     @ViewById
-    Button downloadPause;
+    ImageButton downloadPause;
 
     @ViewById
-    Button downloadCancel;
+    ImageButton downloadCancel;
 
     public DownloadView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);

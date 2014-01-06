@@ -22,9 +22,10 @@
         android:maxWidth="250dp"
         />
 
-    <Button
+    <ImageButton
         android:id="@+id/downloadCancel"
-        android:background="@drawable/ic_action_cancel"
+        android:src="@drawable/ic_action_cancel"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:clickable="true"
@@ -32,9 +33,10 @@
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         />
-    <Button
+    <ImageButton
         android:id="@+id/downloadStart"
-        android:background="@drawable/ic_action_play"
+        android:src="@drawable/ic_action_play"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:clickable="true"
@@ -42,9 +44,10 @@
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@id/downloadCancel"
         />
-    <Button
+    <ImageButton
         android:id="@+id/downloadPause"
-        android:background="@drawable/ic_action_pause"
+        android:src="@drawable/ic_action_pause"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:clickable="true"
@@ -52,9 +55,10 @@
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@id/downloadCancel"
         />
-    <Button
+    <ImageButton
         android:id="@+id/downloadReload"
-        android:background="@drawable/ic_action_replay"
+        android:src="@drawable/ic_action_replay"
+        android:background="?android:attr/selectableItemBackground"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:clickable="true"
