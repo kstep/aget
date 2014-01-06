@@ -3,6 +3,8 @@ package me.kstep.downloader;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -12,7 +14,8 @@ import java.io.InputStream;
 import lombok.Getter;
 import lombok.Setter;
 
-public abstract class Downloader implements Runnable {
+public abstract class Downloader implements Runnable, Parcelable {
+
     public static class FileMetaInfo {
         public String mimeType = null;
         public String fileName = null;
@@ -27,8 +30,8 @@ public abstract class Downloader implements Runnable {
     @Setter static private int bufferSize = 10*1024;
     @Setter static protected int connectTimeout = 2000;
     @Setter static protected int readTimeout = 5000;
-    @Setter static private boolean defaultResume = true;
-    @Setter static private boolean defaultInsecure = true;
+    @Getter @Setter static private boolean defaultResume = true;
+    @Getter @Setter static private boolean defaultInsecure = true;
     @Setter static private boolean useWiFiOnly = false;
 
     @Getter protected long totalSize;
@@ -209,4 +212,38 @@ public abstract class Downloader implements Runnable {
             listener.downloadEnded(this);
         }
     }
+
+    // Parcelable interface {{{
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel out, int opts) {
+        out.writeString(uri.toString());
+        out.writeString(file.toString());
+
+        boolean[] flags = { insecure, resume };
+        out.writeBooleanArray(flags);
+        //out.writeLong("downloadedSize", downloadedSize);
+        //out.writeLong("totalSize", totalSize);
+    }
+
+    final public static Parcelable.Creator<Downloader> CREATOR = new Parcelable.Creator<Downloader> () {
+        public Downloader createFromParcel(Parcel in) {
+            Downloader downloader = new DownloaderFactory().newDownloader(in.readString(), in.readString());
+
+            boolean[] flags = new boolean[2];
+            in.readBooleanArray(flags);
+            downloader.setInsecure(flags[0]);
+            downloader.setResume(flags[1]);
+            return downloader;
+        }
+
+        public Downloader[] newArray(int size) {
+            return new Downloader[size];
+        }
+    };
+    // }}}
 }

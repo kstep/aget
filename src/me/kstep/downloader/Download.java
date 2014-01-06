@@ -1,6 +1,10 @@
 package me.kstep.downloader;
 
+import android.net.Uri;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
+import java.io.File;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -8,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Download implements Downloader.Listener {
+public class Download implements Downloader.Listener, Parcelable {
 
     public Download(Downloadable i) {
         item = i;
@@ -17,14 +21,28 @@ public class Download implements Downloader.Listener {
         downloader = null;
     }
 
+    public Download(Parcel in) {
+        downloader = in.readParcelable(Downloader.class.getClassLoader());
+
+        final File file = new File(in.readString());
+        final Uri uri = Uri.parse(in.readString());
+
+        item = new Downloadable () {
+            public File getFile() { return file; }
+            public Uri getUri() { return uri; }
+        };
+
+        //status = in.readInt("status");
+    }
+
     // Inner classes {{{
-    public enum Status {
-        INITIAL,  // job initialized, nothing done yet
-        STARTED,  // job is running
-        PAUSED,   // job was paused, restart with resume()
-        FINISHED, // job was successfully finished
-        FAILED,   // job was failed
-        CANCELED, // job was cancelled
+    final public static class Status {
+        final public static int INITIAL = 0;  // job initialized, nothing done yet
+        final public static int STARTED = 1;  // job is running
+        final public static int PAUSED = 2;   // job was paused, restart with resume()
+        final public static int FINISHED = 3; // job was successfully finished
+        final public static int FAILED = 4;   // job was failed
+        final public static int CANCELED = 5; // job was cancelled
     }
 
     public static interface Listener {
@@ -38,7 +56,7 @@ public class Download implements Downloader.Listener {
 
     @Setter private Listener listener;
     @Getter private Downloadable item;
-    @Getter private Status status;
+    @Getter private int status;
     private Future<?> job;
 
     private Downloader downloader;
@@ -110,11 +128,10 @@ public class Download implements Downloader.Listener {
     public void downloadFailed(Downloader d, final Throwable e) {
         status = Status.FAILED;
         if (listener != null) {
-            final Download self = this;
             handler.post(new Runnable () {
                 @Override
                 public void run() {
-                    listener.downloadFailed(self, e);
+                    listener.downloadFailed(Download.this, e);
                 }
             });
         }
@@ -122,11 +139,10 @@ public class Download implements Downloader.Listener {
 
     private void notifyListener() {
         if (listener != null) {
-            final Download self = this;
             handler.post(new Runnable () {
                 @Override
                 public void run() {
-                    listener.downloadChanged(self);
+                    listener.downloadChanged(Download.this);
                 }
             });
         }
@@ -138,9 +154,10 @@ public class Download implements Downloader.Listener {
         return job != null && !job.isDone() && !job.isCancelled();
     }
 
-    private void startJob() {
+    private boolean startJob() {
         if (isJobRunning()) {
-            throw new IllegalStateException("Trying to start an already running download process");
+            return false;
+            //throw new IllegalStateException("Trying to start an already running download process");
         }
 
         Downloader downloader = getDownloader();
@@ -148,14 +165,17 @@ public class Download implements Downloader.Listener {
         downloader.setFile(item.getFile());
 
         job = getJobsPool().submit(downloader);
+        return true;
     }
 
-    private void stopJob() {
+    private boolean stopJob() {
         if (!isJobRunning()) {
-            throw new IllegalStateException("Trying to stop a not running download process");
+            return false;
+            //throw new IllegalStateException("Trying to stop a not running download process");
         }
 
         job.cancel(true);
+        return true;
     }
     // }}}
 
@@ -209,5 +229,32 @@ public class Download implements Downloader.Listener {
         status = Status.INITIAL;
         item.getFile().delete();
     }
+    // }}}
+
+    // Parcelable inteface {{{
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeParcelable(getDownloader(), 0);
+        out.writeString(getItem().getFile().toString());
+        out.writeString(getItem().getUri().toString());
+        //out.writeInt(status);
+    }
+
+    final public static Parcelable.Creator<Download> CREATOR = new Parcelable.Creator<Download> () {
+        @Override
+        public Download createFromParcel(Parcel in) {
+            return new Download(in);
+        }
+
+        @Override
+        public Download[] newArray(int size) {
+            return new Download[size];
+        }
+    };
     // }}}
 }

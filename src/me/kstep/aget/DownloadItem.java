@@ -4,13 +4,11 @@ import android.net.Uri;
 import android.os.Environment;
 import android.webkit.MimeTypeMap;
 import java.io.File;
-import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import me.kstep.downloader.Downloadable;
 
-class DownloadItem implements Serializable, Downloadable {
-    private static final long serialVersionUID = 0L;
+class DownloadItem implements Downloadable {
 
     // main meta-data
     @Getter private Uri uri = null;
