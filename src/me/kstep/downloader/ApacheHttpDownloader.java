@@ -30,7 +30,7 @@ public class ApacheHttpDownloader extends Downloader {
         int code = response.getStatusLine().getStatusCode();
 
         if (code != expected_code) {
-            throw new IOException(String.format("Invalid return code %d, expected %d", code, expected_code));
+            throw new HttpDownloadException(code, expected_code);
         }
 
         HttpEntity entity = response.getEntity();

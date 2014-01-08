@@ -56,7 +56,7 @@ public class HttpDownloader extends Downloader {
         conn.connect();
         int code = conn.getResponseCode();
         if (code != expectedCode) {
-            throw new IOException(String.format("Invalid return code %d, expected %d", code, expectedCode));
+	    throw new HttpDownloadException(code, expectedCode);
         }
         return conn;
     }
