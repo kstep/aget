@@ -1,6 +1,8 @@
 package me.kstep.aget;
 
-import java.io.File;
+import android.content.Context;
+import android.content.res.Resources;
+import me.kstep.downloader.HttpDownloadException;
 
 class Util {
     public static String humanizeSize(String format, long value) {
@@ -53,6 +55,24 @@ class Util {
         }
 
         return result;
+    }
+    
+    public static String getHttpErrorMessage(Context context, HttpDownloadException error) {
+        try {
+            return context
+                .getResources()
+                .getString(
+                        R.string.class
+                        .getDeclaredField("error_http_" + error.code)
+                        .getInt(null));
+
+        } catch (Resources.NotFoundException e) {
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalAccessException e) {
+        } catch (IllegalArgumentException e) {
+        }
+
+        return error.getMessage();
     }
 }
 
