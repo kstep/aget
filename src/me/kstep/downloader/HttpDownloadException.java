@@ -6,13 +6,13 @@ public class HttpDownloadException extends IOException {
     final public int code;
     final public int expectedCode;
 
-    public HttpDownloadException(int code) {
+    HttpDownloadException(int code) {
 	super();
 	this.code = code;
         this.expectedCode = code == 200? 206: 200;
     }
     
-    public HttpDownloadException(int code, int expectedCode) {
+    HttpDownloadException(int code, int expectedCode) {
         super();
         this.code = code;
         this.expectedCode = expectedCode;
