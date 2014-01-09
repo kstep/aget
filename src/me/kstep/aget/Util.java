@@ -58,21 +58,21 @@ class Util {
     }
     
     public static String getHttpErrorMessage(Context context, HttpDownloadException error) {
-	try {
-	    return context
-	        .getResources()
-	        .getString(
-	            R.class
-		        .getDeclaredField("error_http_" + error.code)
-		        .getInt(null));
+        try {
+            return context
+                .getResources()
+                .getString(
+                        R.string.class
+                        .getDeclaredField("error_http_" + error.code)
+                        .getInt(null));
 
-	} catch (Resources.NotFoundException e) {
-	} catch (NoSuchFieldException e) {
-	} catch (IllegalAccessException e) {
-	} catch (IllegalArgumentException e) {
-	}
-	
-	return error.getMessage();
+        } catch (Resources.NotFoundException e) {
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalAccessException e) {
+        } catch (IllegalArgumentException e) {
+        }
+
+        return error.getMessage();
     }
 }
 
