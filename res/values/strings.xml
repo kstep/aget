@@ -25,4 +25,11 @@
     <string name="cancel">Cancel</string>
     <string name="remove">Remove</string>
     <string name="delete">Delete</string>
+    
+    <string name="error_http_200">Server refused to resume download. No resume supported?</string>
+    <string name="error_http_404">File was not found on server.</string>
+    <string name="error_http_410">File was removed from server.</string>
+    <string name="error_http_500">Internal server error.</string>
+    <string name="error_http_401">Authorization required. Please prepend the URL with &quot;username:password@&quot;</string>
+    <string name="error_http_403">Access denied. Please check your credentials in the URL or consult server sysadmin.</string>
 </resources>
